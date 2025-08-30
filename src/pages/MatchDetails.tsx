@@ -45,8 +45,8 @@ const MatchDetails = () => {
   }
 
   const match = matchDetails;
-  const isLive = match.fixture.status.short === 'LIVE' || match.fixture.status.short === '1H' || match.fixture.status.short === '2H';
-  const isFinished = match.fixture.status.short === 'FT';
+  const isLive = match.fixture?.status?.short === 'LIVE' || match.fixture?.status?.short === '1H' || match.fixture?.status?.short === '2H';
+  const isFinished = match.fixture?.status?.short === 'FT';
 
   return (
     <main className="container mx-auto px-4 py-6 space-y-6">
@@ -75,8 +75,8 @@ const MatchDetails = () => {
             <div className="flex items-center text-muted-foreground text-sm">
               <Clock className="w-4 h-4 mr-1" />
               {isFinished ? 'Finale' : 
-               isLive ? `${match.fixture.status.elapsed || 0}'` : 
-               new Date(match.fixture.date).toLocaleString('it-IT')}
+               isLive ? `${match.fixture?.status?.elapsed || 0}'` : 
+               match.fixture?.date ? new Date(match.fixture.date).toLocaleString('it-IT') : 'Data non disponibile'}
             </div>
           </div>
 
@@ -102,7 +102,7 @@ const MatchDetails = () => {
 
             {/* Score */}
             <div className="text-center">
-              {(isFinished || isLive) && match.goals.home !== null ? (
+              {(isFinished || isLive) && match.goals?.home !== null ? (
                 <div className="text-4xl font-bold text-primary">
                   {match.goals.home} - {match.goals.away}
                 </div>
@@ -173,22 +173,22 @@ const MatchDetails = () => {
           <Calendar className="w-4 h-4 mr-2" />
           Informazioni partita
         </h3>
-        <div className="space-y-3 text-sm">
+          <div className="space-y-3 text-sm">
           <div className="flex justify-between">
             <span className="text-muted-foreground">Data e ora:</span>
-            <span>{new Date(match.fixture.date).toLocaleString('it-IT')}</span>
+            <span>{match.fixture?.date ? new Date(match.fixture.date).toLocaleString('it-IT') : 'Non disponibile'}</span>
           </div>
           <div className="flex justify-between">
             <span className="text-muted-foreground">Status:</span>
-            <Badge variant="outline">{match.fixture.status.long}</Badge>
+            <Badge variant="outline">{match.fixture?.status?.long || 'Non disponibile'}</Badge>
           </div>
-          {match.fixture.venue && (
+          {match.fixture?.venue && (
             <div className="flex justify-between">
               <span className="text-muted-foreground">Stadio:</span>
               <span>{match.fixture.venue.name}</span>
             </div>
           )}
-          {match.fixture.referee && (
+          {match.fixture?.referee && (
             <div className="flex justify-between">
               <span className="text-muted-foreground">Arbitro:</span>
               <span>{match.fixture.referee}</span>
