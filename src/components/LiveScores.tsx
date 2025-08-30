@@ -6,6 +6,7 @@ import { useFootballData } from "@/hooks/useFootballData";
 import { toast } from "@/hooks/use-toast";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { useState } from "react";
+import { Badge } from "@/components/ui/badge";
 
 interface GroupedMatches {
   [competition: string]: {
@@ -59,7 +60,7 @@ export function LiveScores() {
 
   if (loading) {
     return (
-      <div className="space-y-6">
+      <div className="space-y-4">
         <Card className="p-6 shadow-card">
           <div className="flex items-center justify-center py-8">
             <RefreshCw className="w-6 h-6 animate-spin text-primary" />
@@ -72,7 +73,7 @@ export function LiveScores() {
 
   if (error) {
     return (
-      <div className="space-y-6">
+      <div className="space-y-4">
         <Card className="p-6 shadow-card">
           <div className="flex items-center justify-center py-8 text-center">
             <div>
@@ -121,7 +122,7 @@ export function LiveScores() {
 
   if (competitionEntries.length === 0) {
     return (
-      <div className="space-y-6">
+      <div className="space-y-4">
         <Card className="p-6 shadow-card">
           <div className="text-center py-8 text-muted-foreground">
             <p>Nessuna partita disponibile per oggi.</p>
@@ -137,57 +138,55 @@ export function LiveScores() {
   }
 
   return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between mb-4">
+    <div className="space-y-3">
+      <div className="flex items-center justify-between">
         <h2 className="text-lg font-bold text-foreground">
           Partite per Campionato
         </h2>
-        <Button variant="ghost" size="sm" onClick={handleRefresh}>
-          <RefreshCw className="w-4 h-4 mr-2" />
-          Aggiorna
+        <Button variant="ghost" size="sm" onClick={handleRefresh} className="p-2">
+          <RefreshCw className="w-4 h-4" />
         </Button>
       </div>
 
       {competitionEntries.map(([competition, competitionMatches]) => {
-        const isOpen = openCompetitions[competition] || false;
+        const isOpen = openCompetitions[competition] ?? false;
         const hasLiveMatches = competitionMatches.live.length > 0;
         
         return (
-          <Card key={competition} className="shadow-card">
+          <Card key={competition} className="overflow-hidden shadow-card">
             <Collapsible open={isOpen} onOpenChange={() => toggleCompetition(competition)}>
-              <CollapsibleTrigger asChild>
-                <div className="flex items-center justify-between p-4 hover:bg-muted/50 transition-colors cursor-pointer">
+              <CollapsibleTrigger className="w-full">
+                <div className="flex items-center justify-between p-4 hover:bg-muted/30 transition-colors border-b border-border/50">
                   <div className="flex items-center space-x-3">
                     <div className="flex items-center space-x-2">
                       {isOpen ? (
-                        <ChevronDown className="w-4 h-4 text-muted-foreground" />
+                        <ChevronDown className="w-4 h-4 text-primary" />
                       ) : (
                         <ChevronRight className="w-4 h-4 text-muted-foreground" />
                       )}
-                      <h3 className="font-semibold text-foreground">{competition}</h3>
+                      <h3 className="font-bold text-foreground text-left">{competition}</h3>
                     </div>
-                    {hasLiveMatches && (
-                      <div className="flex items-center space-x-1">
-                        <div className="w-2 h-2 bg-primary rounded-full animate-pulse" />
-                        <span className="text-sm text-primary font-medium">
-                          {competitionMatches.live.length} in diretta
-                        </span>
-                      </div>
-                    )}
                   </div>
-                  <div className="flex items-center space-x-2 text-sm text-muted-foreground">
-                    <span>{competitionMatches.total} partite</span>
+                  <div className="flex items-center space-x-2">
+                    {hasLiveMatches && (
+                      <Badge variant="destructive" className="text-xs px-2 py-1 animate-pulse">
+                        {competitionMatches.live.length} LIVE
+                      </Badge>
+                    )}
+                    <span className="text-sm text-muted-foreground font-medium">
+                      {competitionMatches.total} partite
+                    </span>
                   </div>
                 </div>
               </CollapsibleTrigger>
               <CollapsibleContent>
-                <div className="px-4 pb-4 space-y-3">
+                <div className="bg-muted/20">
                   {/* Live matches first */}
                   {competitionMatches.live.length > 0 && (
-                    <div className="space-y-2">
+                    <div className="p-3 space-y-2">
                       <div className="flex items-center space-x-2 mb-2">
                         <div className="w-2 h-2 bg-primary rounded-full animate-pulse" />
-                        <span className="text-sm font-medium text-primary">In Diretta</span>
+                        <span className="text-sm font-bold text-primary uppercase tracking-wide">In Diretta</span>
                       </div>
                       {competitionMatches.live.map((match) => (
                         <MatchCard key={match.id} match={match} />
@@ -197,10 +196,12 @@ export function LiveScores() {
                   
                   {/* Other matches */}
                   {competitionMatches.other.length > 0 && (
-                    <div className="space-y-2">
+                    <div className="p-3 space-y-2">
                       {competitionMatches.live.length > 0 && (
-                        <div className="flex items-center space-x-2 mb-2 mt-4">
-                          <span className="text-sm font-medium text-muted-foreground">Altre partite</span>
+                        <div className="flex items-center space-x-2 mb-2 pt-3 border-t border-border/30">
+                          <span className="text-sm font-bold text-muted-foreground uppercase tracking-wide">
+                            Altre partite
+                          </span>
                         </div>
                       )}
                       {competitionMatches.other.map((match) => (
