@@ -2,95 +2,96 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
-All colors MUST be HSL.
+/* S1 Score Design System - Mobile Sports App
+All colors MUST be HSL for optimal theming
+Primary: Red (#dc2626) - Live scores, highlights, primary actions
+Secondary: Dark Blue (#1e293b) - Backgrounds, navigation, secondary elements
 */
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
+    --background: 210 40% 98%;
+    --foreground: 210 24% 16%;
+    
+    /* S1 Score Brand Colors */
+    --sport-red: 0 84% 60%;
+    --sport-red-light: 0 84% 70%;
+    --sport-red-dark: 0 84% 50%;
+    --sport-blue: 210 24% 16%;
+    --sport-blue-light: 210 24% 26%;
+    --sport-blue-dark: 210 24% 6%;
+    
+    /* Gradients */
+    --gradient-primary: linear-gradient(135deg, hsl(var(--sport-red)), hsl(var(--sport-red-dark)));
+    --gradient-secondary: linear-gradient(135deg, hsl(var(--sport-blue)), hsl(var(--sport-blue-light)));
+    --gradient-hero: linear-gradient(135deg, hsl(var(--sport-blue-dark)), hsl(var(--sport-red-dark)));
+    
+    /* Shadows */
+    --shadow-card: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+    --shadow-live: 0 0 20px hsl(var(--sport-red) / 0.3);
+    --shadow-elevated: 0 10px 25px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+    
+    /* Transitions */
+    --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-bounce: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
 
+    /* Theme overrides for S1 Score */
+    --primary: var(--sport-red);
+    --primary-foreground: 0 0% 100%;
+    
+    --secondary: var(--sport-blue);
+    --secondary-foreground: 0 0% 100%;
+    
     --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
-
+    --card-foreground: var(--sport-blue);
+    
+    --muted: 210 40% 96%;
+    --muted-foreground: var(--sport-blue-light);
+    
+    --accent: var(--sport-red-light);
+    --accent-foreground: 0 0% 100%;
+    
+    --border: 210 40% 91%;
+    --input: 210 40% 96%;
+    --ring: var(--sport-red);
+    
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+    
     --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
+    --popover-foreground: var(--sport-blue);
 
-    --primary: 222.2 47.4% 11.2%;
-    --primary-foreground: 210 40% 98%;
-
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
-
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
-
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
-
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
-
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 222.2 84% 4.9%;
-
-    --radius: 0.5rem;
-
-    --sidebar-background: 0 0% 98%;
-
-    --sidebar-foreground: 240 5.3% 26.1%;
-
-    --sidebar-primary: 240 5.9% 10%;
-
-    --sidebar-primary-foreground: 0 0% 98%;
-
-    --sidebar-accent: 240 4.8% 95.9%;
-
-    --sidebar-accent-foreground: 240 5.9% 10%;
-
-    --sidebar-border: 220 13% 91%;
-
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    --radius: 0.75rem;
   }
 
   .dark {
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
-
-    --card: 222.2 84% 4.9%;
-    --card-foreground: 210 40% 98%;
-
-    --popover: 222.2 84% 4.9%;
-    --popover-foreground: 210 40% 98%;
-
-    --primary: 210 40% 98%;
-    --primary-foreground: 222.2 47.4% 11.2%;
-
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
-
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
-
-    --accent: 217.2 32.6% 17.5%;
-    --accent-foreground: 210 40% 98%;
-
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
-
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 212.7 26.8% 83.9%;
-    --sidebar-background: 240 5.9% 10%;
-    --sidebar-foreground: 240 4.8% 95.9%;
-    --sidebar-primary: 224.3 76.3% 48%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 240 3.7% 15.9%;
-    --sidebar-accent-foreground: 240 4.8% 95.9%;
-    --sidebar-border: 240 3.7% 15.9%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    --background: var(--sport-blue-dark);
+    --foreground: 210 40% 95%;
+    
+    --primary: var(--sport-red);
+    --primary-foreground: 0 0% 100%;
+    
+    --secondary: var(--sport-blue-light);
+    --secondary-foreground: 210 40% 95%;
+    
+    --card: var(--sport-blue);
+    --card-foreground: 210 40% 95%;
+    
+    --muted: var(--sport-blue-light);
+    --muted-foreground: 210 40% 70%;
+    
+    --accent: var(--sport-red-light);
+    --accent-foreground: 0 0% 100%;
+    
+    --border: var(--sport-blue-light);
+    --input: var(--sport-blue-light);
+    --ring: var(--sport-red);
+    
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+    
+    --popover: var(--sport-blue);
+    --popover-foreground: 210 40% 95%;
   }
 }
 
@@ -100,6 +101,55 @@ All colors MUST be HSL.
   }
 
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground font-sans;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+  
+  /* Custom scrollbar */
+  ::-webkit-scrollbar {
+    width: 6px;
+  }
+  
+  ::-webkit-scrollbar-track {
+    @apply bg-muted;
+  }
+  
+  ::-webkit-scrollbar-thumb {
+    @apply bg-primary rounded-full;
+  }
+}
+
+/* S1 Score Custom Components */
+@layer components {
+  .gradient-primary {
+    background: var(--gradient-primary);
+  }
+  
+  .gradient-secondary {
+    background: var(--gradient-secondary);
+  }
+  
+  .gradient-hero {
+    background: var(--gradient-hero);
+  }
+  
+  .shadow-card {
+    box-shadow: var(--shadow-card);
+  }
+  
+  .shadow-live {
+    box-shadow: var(--shadow-live);
+  }
+  
+  .shadow-elevated {
+    box-shadow: var(--shadow-elevated);
+  }
+  
+  .transition-smooth {
+    transition: var(--transition-smooth);
+  }
+  
+  .transition-bounce {
+    transition: var(--transition-bounce);
   }
 }
