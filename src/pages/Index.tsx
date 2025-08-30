@@ -2,10 +2,13 @@ import { LiveScores } from "@/components/LiveScores";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { TrendingUp, Calendar, Trophy } from "lucide-react";
+import { TrendingUp, Calendar, Trophy, RefreshCw } from "lucide-react";
 import { Link } from "react-router-dom";
+import { useFootballStats } from "@/hooks/useFootballStats";
 
 const Index = () => {
+  const { stats, loading, error, refetch } = useFootballStats();
+  
   return (
     <main className="container mx-auto px-4 py-6 space-y-6">
       {/* Hero Section */}
@@ -28,18 +31,39 @@ const Index = () => {
         </div>
       </Card>
 
-      {/* Quick Stats */}
+      {/* Real Stats */}
       <div className="grid grid-cols-3 gap-3">
-        <Card className="p-4 text-center shadow-card">
-          <div className="text-primary text-2xl font-bold">12</div>
+        <Card className="p-4 text-center shadow-card relative">
+          {loading && (
+            <div className="absolute inset-0 flex items-center justify-center bg-background/50">
+              <RefreshCw className="w-4 h-4 animate-spin text-primary" />
+            </div>
+          )}
+          <div className="text-primary text-2xl font-bold">
+            {error ? '0' : stats.liveMatches}
+          </div>
           <div className="text-xs text-muted-foreground">Live Now</div>
         </Card>
-        <Card className="p-4 text-center shadow-card">
-          <div className="text-primary text-2xl font-bold">8</div>
+        <Card className="p-4 text-center shadow-card relative">
+          {loading && (
+            <div className="absolute inset-0 flex items-center justify-center bg-background/50">
+              <RefreshCw className="w-4 h-4 animate-spin text-primary" />
+            </div>
+          )}
+          <div className="text-primary text-2xl font-bold">
+            {error ? '0' : stats.competitions}
+          </div>
           <div className="text-xs text-muted-foreground">Competitions</div>
         </Card>
-        <Card className="p-4 text-center shadow-card">
-          <div className="text-primary text-2xl font-bold">156</div>
+        <Card className="p-4 text-center shadow-card relative">
+          {loading && (
+            <div className="absolute inset-0 flex items-center justify-center bg-background/50">
+              <RefreshCw className="w-4 h-4 animate-spin text-primary" />
+            </div>
+          )}
+          <div className="text-primary text-2xl font-bold">
+            {error ? '0' : stats.todaysGames}
+          </div>
           <div className="text-xs text-muted-foreground">Today's Games</div>
         </Card>
       </div>
