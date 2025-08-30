@@ -2,12 +2,12 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { RefreshCw, AlertCircle } from "lucide-react";
 import { MatchCard } from "./MatchCard";
-import { useFootballData } from "@/hooks/useFootballData";
+import { useSerieAMatches } from "@/hooks/useSerieAMatches";
 import { toast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
 
 export function LiveScores() {
-  const { matches, loading, error, refetch } = useFootballData();
+  const { matches, loading, error, refetch } = useSerieAMatches();
 
   const handleRefresh = async () => {
     await refetch();
@@ -17,27 +17,29 @@ export function LiveScores() {
     });
   };
 
-  // Convert API data to our component format
+  // Convert API-Football data to our component format
   const convertMatch = (match: any) => ({
-    id: match.id.toString(),
+    id: match.fixture.id.toString(),
     homeTeam: { 
-      name: match.homeTeam.name, 
-      logo: "", 
-      score: match.score.fullTime.home 
+      name: match.teams.home.name, 
+      logo: match.teams.home.logo, 
+      score: match.goals.home 
     },
     awayTeam: { 
-      name: match.awayTeam.name, 
-      logo: "", 
-      score: match.score.fullTime.away 
+      name: match.teams.away.name, 
+      logo: match.teams.away.logo, 
+      score: match.goals.away 
     },
-    competition: match.competition.name,
-    status: (match.status === 'IN_PLAY' ? 'live' : 
-             match.status === 'FINISHED' ? 'finished' : 
+    competition: match.league.name,
+    status: (match.fixture.status.short === 'LIVE' || 
+             match.fixture.status.short === '1H' || 
+             match.fixture.status.short === '2H' ? 'live' : 
+             match.fixture.status.short === 'FT' ? 'finished' : 
              'upcoming') as 'live' | 'finished' | 'upcoming',
-    time: match.status === 'TIMED' ? 
-          new Date(match.utcDate).toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' }) : 
-          new Date(match.utcDate).toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' }),
-    minute: match.status === 'IN_PLAY' ? 90 : undefined, // Football-Data doesn't provide exact minute
+    time: match.fixture.status.short === 'NS' ? 
+          new Date(match.fixture.date).toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' }) : 
+          match.fixture.status.long,
+    minute: match.fixture.status.elapsed || undefined,
   });
 
   if (loading) {
@@ -113,7 +115,7 @@ export function LiveScores() {
           <div className="flex items-center space-x-2 mb-3">
             <div className="w-2 h-2 bg-primary rounded-full animate-pulse" />
             <Badge variant="destructive" className="text-xs px-2 py-1 animate-pulse">
-              {liveMatches.length} LIVE
+              {liveMatches.length} IN DIRETTA
             </Badge>
             <span className="text-sm font-bold text-primary uppercase tracking-wide">
               In Diretta

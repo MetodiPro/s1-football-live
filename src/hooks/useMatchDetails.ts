@@ -164,6 +164,37 @@ export const useMatchDetails = (matchId: string) => {
       }
 
       const match = matchData.response[0];
+      
+      // Traduci lo status
+      const statusTranslations: Record<string, string> = {
+        'Match Finished': 'Partita Finita',
+        'Not Started': 'Non Iniziata', 
+        'First Half': 'Primo Tempo',
+        'Halftime': 'Intervallo',
+        'Second Half': 'Secondo Tempo',
+        'Extra Time': 'Tempi Supplementari',
+        'Penalty In Progress': 'Rigori in Corso',
+        'Match Postponed': 'Partita Rimandata',
+        'Match Cancelled': 'Partita Annullata',
+        'Match Suspended': 'Partita Sospesa',
+        'Live': 'In Diretta'
+      };
+
+      // Traduci i dettagli degli eventi
+      const eventTranslations: Record<string, string> = {
+        'Goal': 'Gol',
+        'Card': 'Cartellino',
+        'substitution': 'Sostituzione',
+        'Yellow Card': 'Cartellino Giallo',
+        'Red Card': 'Cartellino Rosso',
+        'Normal Goal': 'Gol',
+        'Own Goal': 'Autogol',
+        'Penalty': 'Rigore',
+        'Missed Penalty': 'Rigore Sbagliato'
+      };
+
+      match.fixture.status.long = statusTranslations[match.fixture.status.long] || match.fixture.status.long;
+      
       setMatchDetails(match);
 
       // Fetch events
@@ -172,7 +203,13 @@ export const useMatchDetails = (matchId: string) => {
       });
 
       if (!eventsError && eventsData.response) {
-        setEvents(eventsData.response);
+        // Traduci gli eventi
+        const translatedEvents = eventsData.response.map((event: any) => ({
+          ...event,
+          type: eventTranslations[event.type] || event.type,
+          detail: eventTranslations[event.detail] || event.detail
+        }));
+        setEvents(translatedEvents);
       }
 
       // Fetch lineups
