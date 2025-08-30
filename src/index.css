@@ -4,31 +4,35 @@
 
 /* S1 Score Design System - Mobile Sports App
 All colors MUST be HSL for optimal theming
-Primary: Red (#dc2626) - Live scores, highlights, primary actions
-Secondary: Dark Blue (#1e293b) - Backgrounds, navigation, secondary elements
+Primary: Azzurro (#3b82f6) - Live scores, highlights, primary actions
+Secondary: Blu Scuro (#1e3a8a) - Backgrounds, navigation, secondary elements
+Accent: Bianco (#ffffff) - Clean backgrounds, contrast elements
 */
 
 @layer base {
   :root {
-    --background: 210 40% 98%;
-    --foreground: 210 24% 16%;
+    --background: 0 0% 100%;
+    --foreground: 220 39% 11%;
     
-    /* S1 Score Brand Colors */
-    --sport-red: 0 84% 60%;
-    --sport-red-light: 0 84% 70%;
-    --sport-red-dark: 0 84% 50%;
-    --sport-blue: 210 24% 16%;
-    --sport-blue-light: 210 24% 26%;
-    --sport-blue-dark: 210 24% 6%;
+    /* S1 Score Brand Colors - Blu/Azzurro/Bianco */
+    --sport-azzurro: 214 95% 60%;
+    --sport-azzurro-light: 214 95% 75%;
+    --sport-azzurro-dark: 214 95% 45%;
+    --sport-blu: 229 84% 25%;
+    --sport-blu-light: 229 84% 35%;
+    --sport-blu-dark: 229 84% 15%;
+    --sport-bianco: 0 0% 100%;
+    --sport-grigio: 214 32% 91%;
+    --sport-grigio-scuro: 214 20% 60%;
     
     /* Gradients */
-    --gradient-primary: linear-gradient(135deg, hsl(var(--sport-red)), hsl(var(--sport-red-dark)));
-    --gradient-secondary: linear-gradient(135deg, hsl(var(--sport-blue)), hsl(var(--sport-blue-light)));
-    --gradient-hero: linear-gradient(135deg, hsl(var(--sport-blue-dark)), hsl(var(--sport-red-dark)));
+    --gradient-primary: linear-gradient(135deg, hsl(var(--sport-azzurro)), hsl(var(--sport-azzurro-dark)));
+    --gradient-secondary: linear-gradient(135deg, hsl(var(--sport-blu)), hsl(var(--sport-blu-light)));
+    --gradient-hero: linear-gradient(135deg, hsl(var(--sport-blu-dark)), hsl(var(--sport-azzurro-dark)));
     
     /* Shadows */
     --shadow-card: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
-    --shadow-live: 0 0 20px hsl(var(--sport-red) / 0.3);
+    --shadow-live: 0 0 20px hsl(var(--sport-azzurro) / 0.4);
     --shadow-elevated: 0 10px 25px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
     
     /* Transitions */
@@ -36,62 +40,62 @@ Secondary: Dark Blue (#1e293b) - Backgrounds, navigation, secondary elements
     --transition-bounce: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
 
     /* Theme overrides for S1 Score */
-    --primary: var(--sport-red);
-    --primary-foreground: 0 0% 100%;
+    --primary: var(--sport-azzurro);
+    --primary-foreground: var(--sport-bianco);
     
-    --secondary: var(--sport-blue);
-    --secondary-foreground: 0 0% 100%;
+    --secondary: var(--sport-blu);
+    --secondary-foreground: var(--sport-bianco);
     
-    --card: 0 0% 100%;
-    --card-foreground: var(--sport-blue);
+    --card: var(--sport-bianco);
+    --card-foreground: var(--sport-blu);
     
-    --muted: 210 40% 96%;
-    --muted-foreground: var(--sport-blue-light);
+    --muted: var(--sport-grigio);
+    --muted-foreground: var(--sport-grigio-scuro);
     
-    --accent: var(--sport-red-light);
-    --accent-foreground: 0 0% 100%;
+    --accent: var(--sport-azzurro-light);
+    --accent-foreground: var(--sport-bianco);
     
-    --border: 210 40% 91%;
-    --input: 210 40% 96%;
-    --ring: var(--sport-red);
+    --border: var(--sport-grigio);
+    --input: var(--sport-grigio);
+    --ring: var(--sport-azzurro);
     
     --destructive: 0 84% 60%;
-    --destructive-foreground: 0 0% 100%;
+    --destructive-foreground: var(--sport-bianco);
     
-    --popover: 0 0% 100%;
-    --popover-foreground: var(--sport-blue);
+    --popover: var(--sport-bianco);
+    --popover-foreground: var(--sport-blu);
 
     --radius: 0.75rem;
   }
 
   .dark {
-    --background: var(--sport-blue-dark);
-    --foreground: 210 40% 95%;
+    --background: var(--sport-blu-dark);
+    --foreground: 214 32% 95%;
     
-    --primary: var(--sport-red);
-    --primary-foreground: 0 0% 100%;
+    --primary: var(--sport-azzurro);
+    --primary-foreground: var(--sport-bianco);
     
-    --secondary: var(--sport-blue-light);
-    --secondary-foreground: 210 40% 95%;
+    --secondary: var(--sport-blu-light);
+    --secondary-foreground: 214 32% 95%;
     
-    --card: var(--sport-blue);
-    --card-foreground: 210 40% 95%;
+    --card: var(--sport-blu);
+    --card-foreground: 214 32% 95%;
     
-    --muted: var(--sport-blue-light);
-    --muted-foreground: 210 40% 70%;
+    --muted: var(--sport-blu-light);
+    --muted-foreground: 214 32% 70%;
     
-    --accent: var(--sport-red-light);
-    --accent-foreground: 0 0% 100%;
+    --accent: var(--sport-azzurro-light);
+    --accent-foreground: var(--sport-bianco);
     
-    --border: var(--sport-blue-light);
-    --input: var(--sport-blue-light);
-    --ring: var(--sport-red);
+    --border: var(--sport-blu-light);
+    --input: var(--sport-blu-light);
+    --ring: var(--sport-azzurro);
     
     --destructive: 0 84% 60%;
-    --destructive-foreground: 0 0% 100%;
+    --destructive-foreground: var(--sport-bianco);
     
-    --popover: var(--sport-blue);
-    --popover-foreground: 210 40% 95%;
+    --popover: var(--sport-blu);
+    --popover-foreground: 214 32% 95%;
   }
 }
 

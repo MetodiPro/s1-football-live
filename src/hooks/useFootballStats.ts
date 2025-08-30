@@ -68,7 +68,7 @@ export const useFootballStats = () => {
 
     } catch (err) {
       console.error('Error fetching football stats:', err);
-      setError(err instanceof Error ? err.message : 'Failed to fetch stats');
+      setError(err instanceof Error ? err.message : 'Impossibile recuperare le statistiche');
       // Set zeros on error instead of fake data
       setStats({
         liveMatches: 0,

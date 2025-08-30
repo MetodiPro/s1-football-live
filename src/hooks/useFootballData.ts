@@ -71,7 +71,7 @@ export const useFootballData = () => {
       setMatches(data.matches || []);
     } catch (err) {
       console.error('Error fetching football data:', err);
-      setError(err instanceof Error ? err.message : 'Failed to fetch matches');
+      setError(err instanceof Error ? err.message : 'Impossibile recuperare le partite');
     } finally {
       setLoading(false);
     }

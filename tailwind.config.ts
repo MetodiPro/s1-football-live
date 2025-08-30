@@ -56,17 +56,20 @@ export default {
 					DEFAULT: 'hsl(var(--card))',
 					foreground: 'hsl(var(--card-foreground))'
 				},
-				// S1 Score Brand Colors
-				'sport-red': {
-					DEFAULT: 'hsl(var(--sport-red))',
-					light: 'hsl(var(--sport-red-light))',
-					dark: 'hsl(var(--sport-red-dark))'
+				// S1 Score Brand Colors - Azzurro/Blu/Bianco
+				'sport-azzurro': {
+					DEFAULT: 'hsl(var(--sport-azzurro))',
+					light: 'hsl(var(--sport-azzurro-light))',
+					dark: 'hsl(var(--sport-azzurro-dark))'
 				},
-				'sport-blue': {
-					DEFAULT: 'hsl(var(--sport-blue))',
-					light: 'hsl(var(--sport-blue-light))',
-					dark: 'hsl(var(--sport-blue-dark))'
-				}
+				'sport-blu': {
+					DEFAULT: 'hsl(var(--sport-blu))',
+					light: 'hsl(var(--sport-blu-light))',
+					dark: 'hsl(var(--sport-blu-dark))'
+				},
+				'sport-bianco': 'hsl(var(--sport-bianco))',
+				'sport-grigio': 'hsl(var(--sport-grigio))',
+				'sport-grigio-scuro': 'hsl(var(--sport-grigio-scuro))'
 			},
 			backgroundImage: {
 				'gradient-primary': 'var(--gradient-primary)',

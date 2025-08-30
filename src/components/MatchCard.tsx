@@ -39,7 +39,9 @@ export function MatchCard({ match }: MatchCardProps) {
         </Badge>
         <div className="flex items-center text-muted-foreground text-sm">
           <Clock className="w-4 h-4 mr-1" />
-          {isLive ? `${match.minute}'` : match.time}
+          {match.status === "finished" ? "FT" : 
+           match.status === "upcoming" ? "PROSS." :
+           isLive ? `${match.minute}'` : match.time}
         </div>
       </div>
 
@@ -87,7 +89,7 @@ export function MatchCard({ match }: MatchCardProps) {
       {isLive && (
         <div className="mt-3 flex justify-center">
           <Button variant="live" size="xs">
-            LIVE
+            IN DIRETTA
           </Button>
         </div>
       )}

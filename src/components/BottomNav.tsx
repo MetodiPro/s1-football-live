@@ -10,10 +10,10 @@ interface NavItem {
 
 const navItems: NavItem[] = [
   { icon: <Home className="w-5 h-5" />, label: "Home", path: "/" },
-  { icon: <Trophy className="w-5 h-5" />, label: "Matches", path: "/matches" },
-  { icon: <Calendar className="w-5 h-5" />, label: "Schedule", path: "/schedule" },
-  { icon: <TrendingUp className="w-5 h-5" />, label: "Tables", path: "/tables" },
-  { icon: <User className="w-5 h-5" />, label: "Profile", path: "/profile" },
+  { icon: <Trophy className="w-5 h-5" />, label: "Partite", path: "/matches" },
+  { icon: <Calendar className="w-5 h-5" />, label: "Calendario", path: "/schedule" },
+  { icon: <TrendingUp className="w-5 h-5" />, label: "Classifiche", path: "/tables" },
+  { icon: <User className="w-5 h-5" />, label: "Profilo", path: "/profile" },
 ];
 
 export function BottomNav() {

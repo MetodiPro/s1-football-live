@@ -83,14 +83,14 @@ export function LiveScores() {
         <div>
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-lg font-bold text-foreground flex items-center">
-              🔴 Live Now
+              🔴 In Diretta
               <span className="ml-2 text-sm text-muted-foreground">
                 ({liveMatches.length})
               </span>
             </h2>
             <Button variant="ghost" size="sm" onClick={handleRefresh}>
               <RefreshCw className="w-4 h-4 mr-2" />
-              Update
+              Aggiorna
             </Button>
           </div>
           <div className="space-y-3">
@@ -105,11 +105,11 @@ export function LiveScores() {
       <div>
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-lg font-bold text-foreground">
-            {convertedMatches.length > 0 ? "Recent & Upcoming" : "Nessuna partita oggi"}
+            {convertedMatches.length > 0 ? "Recenti e Prossime" : "Nessuna partita oggi"}
           </h2>
           <Button variant="ghost" size="sm" onClick={handleRefresh}>
             <RefreshCw className="w-4 h-4 mr-2" />
-            Update
+            Aggiorna
           </Button>
         </div>
         <div className="space-y-3">

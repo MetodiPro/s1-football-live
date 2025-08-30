@@ -15,17 +15,17 @@ const Index = () => {
       <Card className="bg-gradient-hero text-white p-6 shadow-elevated">
         <div className="text-center space-y-3">
           <h1 className="text-3xl font-bold">
-            Welcome to <span className="text-primary">S1 Score</span>
+            Benvenuto su <span className="text-primary">S1 Score</span>
           </h1>
           <p className="text-white/90 text-lg">
             I risultati in tempo reale dei principali campionati europei
           </p>
           <div className="flex justify-center gap-2 pt-2">
             <Badge className="bg-white/20 text-white border-white/30">
-              ⚽ Live Scores
+              ⚽ Risultati Live
             </Badge>
             <Badge className="bg-white/20 text-white border-white/30">
-              📊 Real Time
+              📊 Tempo Reale
             </Badge>
           </div>
         </div>
@@ -42,7 +42,7 @@ const Index = () => {
           <div className="text-primary text-2xl font-bold">
             {error ? '0' : stats.liveMatches}
           </div>
-          <div className="text-xs text-muted-foreground">Live Now</div>
+          <div className="text-xs text-muted-foreground">In Diretta</div>
         </Card>
         <Card className="p-4 text-center shadow-card relative">
           {loading && (
@@ -53,7 +53,7 @@ const Index = () => {
           <div className="text-primary text-2xl font-bold">
             {error ? '0' : stats.competitions}
           </div>
-          <div className="text-xs text-muted-foreground">Competitions</div>
+          <div className="text-xs text-muted-foreground">Competizioni</div>
         </Card>
         <Card className="p-4 text-center shadow-card relative">
           {loading && (
@@ -64,7 +64,7 @@ const Index = () => {
           <div className="text-primary text-2xl font-bold">
             {error ? '0' : stats.todaysGames}
           </div>
-          <div className="text-xs text-muted-foreground">Today's Games</div>
+          <div className="text-xs text-muted-foreground">Partite Oggi</div>
         </Card>
       </div>
 
@@ -73,19 +73,19 @@ const Index = () => {
         <Link to="/tables">
           <Button variant="outline" className="flex flex-col items-center space-y-2 h-auto py-4 w-full">
             <TrendingUp className="w-5 h-5 text-primary" />
-            <span className="text-xs">Tables</span>
+            <span className="text-xs">Classifiche</span>
           </Button>
         </Link>
         <Link to="/schedule">
           <Button variant="outline" className="flex flex-col items-center space-y-2 h-auto py-4 w-full">
             <Calendar className="w-5 h-5 text-primary" />
-            <span className="text-xs">Schedule</span>
+            <span className="text-xs">Calendario</span>
           </Button>
         </Link>
         <Link to="/matches">
           <Button variant="outline" className="flex flex-col items-center space-y-2 h-auto py-4 w-full">
             <Trophy className="w-5 h-5 text-primary" />
-            <span className="text-xs">Matches</span>
+            <span className="text-xs">Partite</span>
           </Button>
         </Link>
       </div>
