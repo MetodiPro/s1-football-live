@@ -2,3 +2,6 @@ project_id = "urebctifhcxphqbhwrjr"
 
 [functions.football-data]
 verify_jwt = false
+
+[functions.api-football]
+verify_jwt = false

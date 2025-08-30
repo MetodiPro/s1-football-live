@@ -2,61 +2,138 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 
 export interface MatchDetails {
-  id: number;
-  homeTeam: {
-    name: string;
-    crest?: string;
+  fixture: {
+    id: number;
+    referee: string;
+    timezone: string;
+    date: string;
+    timestamp: number;
+    status: {
+      long: string;
+      short: string;
+      elapsed: number | null;
+    };
+    venue: {
+      id: number;
+      name: string;
+      city: string;
+    };
   };
-  awayTeam: {
+  league: {
+    id: number;
     name: string;
-    crest?: string;
+    country: string;
+    logo: string;
+    flag: string;
+    season: number;
+    round: string;
+  };
+  teams: {
+    home: {
+      id: number;
+      name: string;
+      logo: string;
+      winner: boolean | null;
+    };
+    away: {
+      id: number;
+      name: string;
+      logo: string;
+      winner: boolean | null;
+    };
+  };
+  goals: {
+    home: number | null;
+    away: number | null;
   };
   score: {
-    fullTime: {
+    halftime: {
       home: number | null;
       away: number | null;
     };
-    halfTime?: {
+    fulltime: {
+      home: number | null;
+      away: number | null;
+    };
+    extratime: {
+      home: number | null;
+      away: number | null;
+    };
+    penalty: {
       home: number | null;
       away: number | null;
     };
   };
-  status: string;
-  utcDate: string;
-  competition: {
-    name: string;
-    emblem?: string;
-  };
-  venue?: string;
-  referee?: string;
-  goals?: Array<{
-    minute: number;
-    scorer?: {
+  events?: Array<{
+    time: {
+      elapsed: number;
+      extra: number | null;
+    };
+    team: {
+      id: number;
+      name: string;
+      logo: string;
+    };
+    player: {
+      id: number;
       name: string;
     };
-    team: 'HOME_TEAM' | 'AWAY_TEAM';
+    assist?: {
+      id: number;
+      name: string;
+    };
     type: string;
+    detail: string;
+    comments?: string;
   }>;
-  lineups?: {
-    homeTeam: {
-      formation?: string;
-      lineup: Array<{
-        name: string;
-        position: string;
-      }>;
+  lineups?: Array<{
+    team: {
+      id: number;
+      name: string;
+      logo: string;
+      colors: {
+        player: {
+          primary: string;
+          number: string;
+          border: string;
+        };
+        goalkeeper: {
+          primary: string;
+          number: string;
+          border: string;
+        };
+      };
     };
-    awayTeam: {
-      formation?: string;
-      lineup: Array<{
-        name: string;
-        position: string;
-      }>;
+    coach: {
+      id: number;
+      name: string;
+      photo: string;
     };
-  };
+    formation: string;
+    startXI: Array<{
+      player: {
+        id: number;
+        name: string;
+        number: number;
+        pos: string;
+        grid: string;
+      };
+    }>;
+    substitutes: Array<{
+      player: {
+        id: number;
+        name: string;
+        number: number;
+        pos: string;
+      };
+    }>;
+  }>;
 }
 
 export const useMatchDetails = (matchId: string) => {
   const [matchDetails, setMatchDetails] = useState<MatchDetails | null>(null);
+  const [events, setEvents] = useState<any[]>([]);
+  const [lineups, setLineups] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -71,26 +148,45 @@ export const useMatchDetails = (matchId: string) => {
       setLoading(true);
       setError(null);
 
-      console.log(`Fetching match details for ID: ${matchId}`);
+      console.log(`Fetching match details for ID: ${matchId} from API-Football`);
       
-      const { data, error: functionError } = await supabase.functions.invoke('football-data', {
-        body: { 
-          endpoint: `matches/${matchId}` 
-        }
+      // Fetch match details
+      const { data: matchData, error: matchError } = await supabase.functions.invoke('api-football', {
+        body: { endpoint: `fixtures?id=${matchId}` }
       });
 
-      if (functionError) {
-        throw new Error(functionError.message);
+      if (matchError || matchData.error) {
+        throw new Error(matchError?.message || matchData.error || 'Errore nel recupero partita');
       }
 
-      if (data.error) {
-        throw new Error(data.error);
+      if (!matchData.response || matchData.response.length === 0) {
+        throw new Error('Partita non trovata');
       }
 
-      console.log('Match details API Response:', data);
-      setMatchDetails(data);
+      const match = matchData.response[0];
+      setMatchDetails(match);
+
+      // Fetch events
+      const { data: eventsData, error: eventsError } = await supabase.functions.invoke('api-football', {
+        body: { endpoint: `fixtures/events?fixture=${matchId}` }
+      });
+
+      if (!eventsError && eventsData.response) {
+        setEvents(eventsData.response);
+      }
+
+      // Fetch lineups
+      const { data: lineupsData, error: lineupsError } = await supabase.functions.invoke('api-football', {
+        body: { endpoint: `fixtures/lineups?fixture=${matchId}` }
+      });
+
+      if (!lineupsError && lineupsData.response) {
+        setLineups(lineupsData.response);
+      }
+
+      console.log('Match details fetched successfully from API-Football');
     } catch (err) {
-      console.error('Error fetching match details:', err);
+      console.error('Error fetching match details from API-Football:', err);
       setError(err instanceof Error ? err.message : 'Impossibile recuperare i dettagli della partita');
     } finally {
       setLoading(false);
@@ -103,6 +199,8 @@ export const useMatchDetails = (matchId: string) => {
 
   return {
     matchDetails,
+    events,
+    lineups,
     loading,
     error,
     refetch: fetchMatchDetails
