@@ -8,7 +8,7 @@ const Index = () => {
       {/* Hero Image */}
       <div className="w-full">
         <img 
-          src="/lovable-uploads/015971d5-b0b0-4639-adb6-924871746319.png" 
+          src="/lovable-uploads/1b63cf75-3b04-4ff3-a981-f0f42c5044b8.png" 
           alt="S1 Score - Risultati in tempo reale della Serie A italiana"
           className="w-full h-auto rounded-lg shadow-elevated"
         />
