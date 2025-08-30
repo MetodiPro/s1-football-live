@@ -39,12 +39,21 @@ export const useFootballData = () => {
       setLoading(true);
       setError(null);
 
-      // Fetch matches from today
-      const today = new Date().toISOString().split('T')[0];
+      // Fetch matches from a range of dates to increase chances of finding matches
+      const today = new Date();
+      const yesterday = new Date(today);
+      yesterday.setDate(yesterday.getDate() - 1);
+      const tomorrow = new Date(today);
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      
+      const dateFrom = yesterday.toISOString().split('T')[0];
+      const dateTo = tomorrow.toISOString().split('T')[0];
+      
+      console.log(`Fetching matches from ${dateFrom} to ${dateTo}`);
       
       const { data, error: functionError } = await supabase.functions.invoke('football-data', {
         body: { 
-          endpoint: `matches?dateFrom=${today}&dateTo=${today}` 
+          endpoint: `matches?dateFrom=${dateFrom}&dateTo=${dateTo}` 
         }
       });
 
@@ -55,6 +64,9 @@ export const useFootballData = () => {
       if (data.error) {
         throw new Error(data.error);
       }
+
+      console.log('Football Data API Response:', data);
+      console.log('Number of matches found:', data.matches?.length || 0);
 
       setMatches(data.matches || []);
     } catch (err) {

@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { TrendingUp, Calendar, Trophy } from "lucide-react";
+import { Link } from "react-router-dom";
 
 const Index = () => {
   return (
@@ -45,18 +46,24 @@ const Index = () => {
 
       {/* Quick Actions */}
       <div className="grid grid-cols-3 gap-3">
-        <Button variant="outline" className="flex flex-col items-center space-y-2 h-auto py-4">
-          <TrendingUp className="w-5 h-5 text-primary" />
-          <span className="text-xs">Tables</span>
-        </Button>
-        <Button variant="outline" className="flex flex-col items-center space-y-2 h-auto py-4">
-          <Calendar className="w-5 h-5 text-primary" />
-          <span className="text-xs">Schedule</span>
-        </Button>
-        <Button variant="outline" className="flex flex-col items-center space-y-2 h-auto py-4">
-          <Trophy className="w-5 h-5 text-primary" />
-          <span className="text-xs">Cups</span>
-        </Button>
+        <Link to="/tables">
+          <Button variant="outline" className="flex flex-col items-center space-y-2 h-auto py-4 w-full">
+            <TrendingUp className="w-5 h-5 text-primary" />
+            <span className="text-xs">Tables</span>
+          </Button>
+        </Link>
+        <Link to="/schedule">
+          <Button variant="outline" className="flex flex-col items-center space-y-2 h-auto py-4 w-full">
+            <Calendar className="w-5 h-5 text-primary" />
+            <span className="text-xs">Schedule</span>
+          </Button>
+        </Link>
+        <Link to="/matches">
+          <Button variant="outline" className="flex flex-col items-center space-y-2 h-auto py-4 w-full">
+            <Trophy className="w-5 h-5 text-primary" />
+            <span className="text-xs">Matches</span>
+          </Button>
+        </Link>
       </div>
 
       {/* Live Scores */}
