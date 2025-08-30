@@ -1,12 +1,23 @@
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { RefreshCw, AlertCircle } from "lucide-react";
+import { RefreshCw, AlertCircle, ChevronDown, ChevronRight } from "lucide-react";
 import { MatchCard } from "./MatchCard";
 import { useFootballData } from "@/hooks/useFootballData";
 import { toast } from "@/hooks/use-toast";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { useState } from "react";
+
+interface GroupedMatches {
+  [competition: string]: {
+    live: any[];
+    other: any[];
+    total: number;
+  };
+}
 
 export function LiveScores() {
   const { matches, loading, error, refetch } = useFootballData();
+  const [openCompetitions, setOpenCompetitions] = useState<Record<string, boolean>>({});
 
   const handleRefresh = async () => {
     await refetch();
@@ -14,6 +25,13 @@ export function LiveScores() {
       title: "Aggiornamento completato",
       description: "I risultati sono stati aggiornati con successo.",
     });
+  };
+
+  const toggleCompetition = (competition: string) => {
+    setOpenCompetitions(prev => ({
+      ...prev,
+      [competition]: !prev[competition]
+    }));
   };
 
   // Convert API data to our component format
@@ -73,58 +91,129 @@ export function LiveScores() {
   }
 
   const convertedMatches = matches.map(convertMatch);
-  const liveMatches = convertedMatches.filter(match => match.status === "live");
-  const otherMatches = convertedMatches.filter(match => match.status !== "live");
+  
+  // Group matches by competition
+  const groupedMatches: GroupedMatches = convertedMatches.reduce((acc, match) => {
+    const competition = match.competition;
+    
+    if (!acc[competition]) {
+      acc[competition] = { live: [], other: [], total: 0 };
+    }
+    
+    if (match.status === 'live') {
+      acc[competition].live.push(match);
+    } else {
+      acc[competition].other.push(match);
+    }
+    
+    acc[competition].total = acc[competition].live.length + acc[competition].other.length;
+    
+    return acc;
+  }, {} as GroupedMatches);
 
-  return (
-    <div className="space-y-6">
-      {/* Live Matches Section */}
-      {liveMatches.length > 0 && (
-        <div>
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-bold text-foreground flex items-center">
-              🔴 In Diretta
-              <span className="ml-2 text-sm text-muted-foreground">
-                ({liveMatches.length})
-              </span>
-            </h2>
-            <Button variant="ghost" size="sm" onClick={handleRefresh}>
+  const competitionEntries = Object.entries(groupedMatches).sort(([, a], [, b]) => {
+    // Sort by live matches first, then by total matches
+    if (a.live.length !== b.live.length) {
+      return b.live.length - a.live.length;
+    }
+    return b.total - a.total;
+  });
+
+  if (competitionEntries.length === 0) {
+    return (
+      <div className="space-y-6">
+        <Card className="p-6 shadow-card">
+          <div className="text-center py-8 text-muted-foreground">
+            <p>Nessuna partita disponibile per oggi.</p>
+            <p className="text-sm mt-1">Prova ad aggiornare o controlla domani.</p>
+            <Button onClick={handleRefresh} variant="outline" size="sm" className="mt-4">
               <RefreshCw className="w-4 h-4 mr-2" />
               Aggiorna
             </Button>
           </div>
-          <div className="space-y-3">
-            {liveMatches.map(match => (
-              <MatchCard key={match.id} match={match} />
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* Other Matches */}
-      <div>
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-bold text-foreground">
-            {convertedMatches.length > 0 ? "Recenti e Prossime" : "Nessuna partita oggi"}
-          </h2>
-          <Button variant="ghost" size="sm" onClick={handleRefresh}>
-            <RefreshCw className="w-4 h-4 mr-2" />
-            Aggiorna
-          </Button>
-        </div>
-        <div className="space-y-3">
-          {otherMatches.length > 0 ? (
-            otherMatches.map(match => (
-              <MatchCard key={match.id} match={match} />
-            ))
-          ) : (
-            <div className="text-center py-8 text-muted-foreground">
-              <p>Nessuna partita disponibile per oggi.</p>
-              <p className="text-sm mt-1">Prova ad aggiornare o controlla domani.</p>
-            </div>
-          )}
-        </div>
+        </Card>
       </div>
+    );
+  }
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center justify-between mb-4">
+        <h2 className="text-lg font-bold text-foreground">
+          Partite per Campionato
+        </h2>
+        <Button variant="ghost" size="sm" onClick={handleRefresh}>
+          <RefreshCw className="w-4 h-4 mr-2" />
+          Aggiorna
+        </Button>
+      </div>
+
+      {competitionEntries.map(([competition, competitionMatches]) => {
+        const isOpen = openCompetitions[competition] || false;
+        const hasLiveMatches = competitionMatches.live.length > 0;
+        
+        return (
+          <Card key={competition} className="shadow-card">
+            <Collapsible open={isOpen} onOpenChange={() => toggleCompetition(competition)}>
+              <CollapsibleTrigger asChild>
+                <div className="flex items-center justify-between p-4 hover:bg-muted/50 transition-colors cursor-pointer">
+                  <div className="flex items-center space-x-3">
+                    <div className="flex items-center space-x-2">
+                      {isOpen ? (
+                        <ChevronDown className="w-4 h-4 text-muted-foreground" />
+                      ) : (
+                        <ChevronRight className="w-4 h-4 text-muted-foreground" />
+                      )}
+                      <h3 className="font-semibold text-foreground">{competition}</h3>
+                    </div>
+                    {hasLiveMatches && (
+                      <div className="flex items-center space-x-1">
+                        <div className="w-2 h-2 bg-primary rounded-full animate-pulse" />
+                        <span className="text-sm text-primary font-medium">
+                          {competitionMatches.live.length} in diretta
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                  <div className="flex items-center space-x-2 text-sm text-muted-foreground">
+                    <span>{competitionMatches.total} partite</span>
+                  </div>
+                </div>
+              </CollapsibleTrigger>
+              <CollapsibleContent>
+                <div className="px-4 pb-4 space-y-3">
+                  {/* Live matches first */}
+                  {competitionMatches.live.length > 0 && (
+                    <div className="space-y-2">
+                      <div className="flex items-center space-x-2 mb-2">
+                        <div className="w-2 h-2 bg-primary rounded-full animate-pulse" />
+                        <span className="text-sm font-medium text-primary">In Diretta</span>
+                      </div>
+                      {competitionMatches.live.map((match) => (
+                        <MatchCard key={match.id} match={match} />
+                      ))}
+                    </div>
+                  )}
+                  
+                  {/* Other matches */}
+                  {competitionMatches.other.length > 0 && (
+                    <div className="space-y-2">
+                      {competitionMatches.live.length > 0 && (
+                        <div className="flex items-center space-x-2 mb-2 mt-4">
+                          <span className="text-sm font-medium text-muted-foreground">Altre partite</span>
+                        </div>
+                      )}
+                      {competitionMatches.other.map((match) => (
+                        <MatchCard key={match.id} match={match} />
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </CollapsibleContent>
+            </Collapsible>
+          </Card>
+        );
+      })}
     </div>
   );
 }
