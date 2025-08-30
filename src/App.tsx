@@ -10,6 +10,7 @@ import Matches from "./pages/Matches";
 import Schedule from "./pages/Schedule";
 import Tables from "./pages/Tables";
 import Profile from "./pages/Profile";
+import MatchDetails from "./pages/MatchDetails";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -25,6 +26,7 @@ const App = () => (
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/matches" element={<Matches />} />
+            <Route path="/match/:id" element={<MatchDetails />} />
             <Route path="/schedule" element={<Schedule />} />
             <Route path="/tables" element={<Tables />} />
             <Route path="/profile" element={<Profile />} />

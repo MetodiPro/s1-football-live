@@ -2,6 +2,7 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Clock, Circle } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 interface Team {
   name: string;
@@ -24,11 +25,19 @@ interface MatchCardProps {
 }
 
 export function MatchCard({ match }: MatchCardProps) {
+  const navigate = useNavigate();
   const isLive = match.status === "live";
   const isFinished = match.status === "finished";
 
+  const handleClick = () => {
+    navigate(`/match/${match.id}`);
+  };
+
   return (
-    <Card className="shadow-card hover:shadow-elevated transition-smooth bg-card">
+    <Card 
+      className="shadow-card hover:shadow-elevated transition-smooth bg-card cursor-pointer"
+      onClick={handleClick}
+    >
       <div className="p-3">
         <div className="flex items-center justify-between mb-3">
           <Badge 
