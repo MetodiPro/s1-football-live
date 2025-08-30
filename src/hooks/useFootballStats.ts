@@ -21,7 +21,7 @@ export const useFootballStats = () => {
       setLoading(true);
       setError(null);
 
-      // Fetch matches from yesterday to tomorrow to get comprehensive data
+      // Fetch Serie A matches
       const today = new Date();
       const yesterday = new Date(today);
       yesterday.setDate(yesterday.getDate() - 1);
@@ -33,7 +33,7 @@ export const useFootballStats = () => {
       
       const { data, error: functionError } = await supabase.functions.invoke('football-data', {
         body: { 
-          endpoint: `matches?dateFrom=${dateFrom}&dateTo=${dateTo}` 
+          endpoint: `competitions/SA/matches?dateFrom=${dateFrom}&dateTo=${dateTo}` 
         }
       });
 
@@ -47,11 +47,11 @@ export const useFootballStats = () => {
 
       const matches = data.matches || [];
       
-      // Calculate real statistics
+      // Calculate real statistics for Serie A only
       const liveMatches = matches.filter((match: any) => match.status === 'IN_PLAY').length;
       
-      // Get unique competitions
-      const competitions = new Set(matches.map((match: any) => match.competition.id)).size;
+      // Serie A has only 1 competition
+      const competitions = matches.length > 0 ? 1 : 0;
       
       // Get today's games
       const todayStr = today.toISOString().split('T')[0];

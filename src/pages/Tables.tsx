@@ -1,11 +1,177 @@
 import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { RefreshCw, AlertCircle, Trophy, TrendingUp, TrendingDown } from "lucide-react";
+import { useSerieAStandings } from "@/hooks/useSerieAStandings";
+import { toast } from "@/hooks/use-toast";
+import { Badge } from "@/components/ui/badge";
 
 const Tables = () => {
+  const { standings, season, loading, error, refetch } = useSerieAStandings();
+
+  const handleRefresh = async () => {
+    await refetch();
+    toast({
+      title: "Classifica aggiornata",
+      description: "La classifica è stata aggiornata con successo.",
+    });
+  };
+
+  const getPositionStyle = (position: number) => {
+    if (position <= 4) return "bg-primary/10 border-l-4 border-primary"; // Champions League
+    if (position === 5) return "bg-orange-500/10 border-l-4 border-orange-500"; // Europa League
+    if (position === 6) return "bg-green-500/10 border-l-4 border-green-500"; // Conference League
+    if (position >= 18) return "bg-destructive/10 border-l-4 border-destructive"; // Relegation
+    return "bg-muted/30";
+  };
+
+  const getPositionBadge = (position: number) => {
+    if (position <= 4) return { text: "UCL", variant: "default" as const };
+    if (position === 5) return { text: "UEL", variant: "secondary" as const };
+    if (position === 6) return { text: "UECL", variant: "outline" as const };
+    if (position >= 18) return { text: "RET", variant: "destructive" as const };
+    return null;
+  };
+
+  if (loading) {
+    return (
+      <main className="container mx-auto px-4 py-6 space-y-6">
+        <div className="flex items-center justify-between">
+          <h1 className="text-2xl font-bold text-foreground">Classifica Serie A</h1>
+        </div>
+        <Card className="p-6 shadow-card">
+          <div className="flex items-center justify-center py-8">
+            <RefreshCw className="w-6 h-6 animate-spin text-primary" />
+            <span className="ml-2 text-muted-foreground">Caricamento classifica...</span>
+          </div>
+        </Card>
+      </main>
+    );
+  }
+
+  if (error) {
+    return (
+      <main className="container mx-auto px-4 py-6 space-y-6">
+        <div className="flex items-center justify-between">
+          <h1 className="text-2xl font-bold text-foreground">Classifica Serie A</h1>
+        </div>
+        <Card className="p-6 shadow-card">
+          <div className="flex items-center justify-center py-8 text-center">
+            <div>
+              <AlertCircle className="w-6 h-6 text-destructive mx-auto mb-2" />
+              <p className="text-muted-foreground mb-2">Errore nel caricamento della classifica</p>
+              <p className="text-sm text-muted-foreground/80 mb-4">{error}</p>
+              <Button onClick={handleRefresh} variant="outline" size="sm">
+                <RefreshCw className="w-4 h-4 mr-2" />
+                Riprova
+              </Button>
+            </div>
+          </div>
+        </Card>
+      </main>
+    );
+  }
+
   return (
     <main className="container mx-auto px-4 py-6 space-y-6">
-      <h1 className="text-2xl font-bold text-foreground">Classifiche</h1>
-      <Card className="p-6">
-        <p className="text-muted-foreground">Classifiche in sviluppo...</p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-foreground">Classifica Serie A</h1>
+          {season && (
+            <p className="text-sm text-muted-foreground">
+              Stagione {new Date(season.startDate).getFullYear()}/{new Date(season.endDate).getFullYear()} 
+              {season.currentMatchday && ` • Giornata ${season.currentMatchday}`}
+            </p>
+          )}
+        </div>
+        <Button variant="ghost" size="sm" onClick={handleRefresh}>
+          <RefreshCw className="w-4 h-4" />
+        </Button>
+      </div>
+
+      <Card className="shadow-card overflow-hidden">
+        {/* Header */}
+        <div className="p-4 bg-muted/30 border-b border-border/50">
+          <div className="grid grid-cols-12 gap-2 text-xs font-medium text-muted-foreground uppercase tracking-wide">
+            <div className="col-span-1 text-center">Pos</div>
+            <div className="col-span-4">Squadra</div>
+            <div className="col-span-1 text-center">G</div>
+            <div className="col-span-1 text-center">V</div>
+            <div className="col-span-1 text-center">N</div>
+            <div className="col-span-1 text-center">P</div>
+            <div className="col-span-1 text-center">Dif</div>
+            <div className="col-span-2 text-center">Punti</div>
+          </div>
+        </div>
+
+        {/* Teams */}
+        <div className="divide-y divide-border/30">
+          {standings.map((team) => {
+            const badge = getPositionBadge(team.position);
+            return (
+              <div
+                key={team.team.id}
+                className={`p-3 transition-colors hover:bg-muted/20 ${getPositionStyle(team.position)}`}
+              >
+                <div className="grid grid-cols-12 gap-2 items-center">
+                  <div className="col-span-1 text-center">
+                    <div className="flex flex-col items-center">
+                      <span className="font-bold text-sm">{team.position}</span>
+                      {badge && (
+                        <Badge variant={badge.variant} className="text-xs px-1 py-0 mt-1">
+                          {badge.text}
+                        </Badge>
+                      )}
+                    </div>
+                  </div>
+                  <div className="col-span-4">
+                    <div className="flex items-center space-x-2">
+                      <div className="w-6 h-6 bg-primary/10 rounded-full flex items-center justify-center flex-shrink-0">
+                        <span className="text-xs font-bold text-primary">
+                          {team.team.shortName?.substring(0, 2) || team.team.name.substring(0, 2).toUpperCase()}
+                        </span>
+                      </div>
+                      <span className="font-medium text-sm truncate">{team.team.name}</span>
+                    </div>
+                  </div>
+                  <div className="col-span-1 text-center text-sm">{team.playedGames}</div>
+                  <div className="col-span-1 text-center text-sm text-green-600 font-medium">{team.won}</div>
+                  <div className="col-span-1 text-center text-sm text-yellow-600 font-medium">{team.draw}</div>
+                  <div className="col-span-1 text-center text-sm text-red-600 font-medium">{team.lost}</div>
+                  <div className="col-span-1 text-center text-sm">
+                    <span className={team.goalDifference > 0 ? 'text-green-600' : team.goalDifference < 0 ? 'text-red-600' : ''}>
+                      {team.goalDifference > 0 ? '+' : ''}{team.goalDifference}
+                    </span>
+                  </div>
+                  <div className="col-span-2 text-center">
+                    <span className="text-lg font-bold text-primary">{team.points}</span>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Legend */}
+        <div className="p-4 bg-muted/20 border-t border-border/50">
+          <div className="flex flex-wrap gap-3 text-xs">
+            <div className="flex items-center space-x-1">
+              <div className="w-3 h-3 bg-primary rounded"></div>
+              <span className="text-muted-foreground">Champions League</span>
+            </div>
+            <div className="flex items-center space-x-1">
+              <div className="w-3 h-3 bg-orange-500 rounded"></div>
+              <span className="text-muted-foreground">Europa League</span>
+            </div>
+            <div className="flex items-center space-x-1">
+              <div className="w-3 h-3 bg-green-500 rounded"></div>
+              <span className="text-muted-foreground">Conference League</span>
+            </div>
+            <div className="flex items-center space-x-1">
+              <div className="w-3 h-3 bg-destructive rounded"></div>
+              <span className="text-muted-foreground">Retrocessione</span>
+            </div>
+          </div>
+        </div>
       </Card>
     </main>
   );

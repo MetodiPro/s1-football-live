@@ -39,7 +39,7 @@ export const useFootballData = () => {
       setLoading(true);
       setError(null);
 
-      // Fetch matches from a range of dates to increase chances of finding matches
+      // Fetch matches from Serie A italiana (competition ID: SA)
       const today = new Date();
       const yesterday = new Date(today);
       yesterday.setDate(yesterday.getDate() - 1);
@@ -49,11 +49,11 @@ export const useFootballData = () => {
       const dateFrom = yesterday.toISOString().split('T')[0];
       const dateTo = tomorrow.toISOString().split('T')[0];
       
-      console.log(`Fetching matches from ${dateFrom} to ${dateTo}`);
+      console.log(`Fetching Serie A matches from ${dateFrom} to ${dateTo}`);
       
       const { data, error: functionError } = await supabase.functions.invoke('football-data', {
         body: { 
-          endpoint: `matches?dateFrom=${dateFrom}&dateTo=${dateTo}` 
+          endpoint: `competitions/SA/matches?dateFrom=${dateFrom}&dateTo=${dateTo}` 
         }
       });
 
@@ -65,13 +65,13 @@ export const useFootballData = () => {
         throw new Error(data.error);
       }
 
-      console.log('Football Data API Response:', data);
-      console.log('Number of matches found:', data.matches?.length || 0);
+      console.log('Serie A API Response:', data);
+      console.log('Number of Serie A matches found:', data.matches?.length || 0);
 
       setMatches(data.matches || []);
     } catch (err) {
-      console.error('Error fetching football data:', err);
-      setError(err instanceof Error ? err.message : 'Impossibile recuperare le partite');
+      console.error('Error fetching Serie A data:', err);
+      setError(err instanceof Error ? err.message : 'Impossibile recuperare le partite della Serie A');
     } finally {
       setLoading(false);
     }
