@@ -1,24 +1,13 @@
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { RefreshCw, AlertCircle, ChevronDown, ChevronRight } from "lucide-react";
+import { RefreshCw, AlertCircle } from "lucide-react";
 import { MatchCard } from "./MatchCard";
 import { useFootballData } from "@/hooks/useFootballData";
 import { toast } from "@/hooks/use-toast";
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
-
-interface GroupedMatches {
-  [competition: string]: {
-    live: any[];
-    other: any[];
-    total: number;
-  };
-}
 
 export function LiveScores() {
   const { matches, loading, error, refetch } = useFootballData();
-  const [openCompetitions, setOpenCompetitions] = useState<Record<string, boolean>>({});
 
   const handleRefresh = async () => {
     await refetch();
@@ -26,13 +15,6 @@ export function LiveScores() {
       title: "Aggiornamento completato",
       description: "I risultati sono stati aggiornati con successo.",
     });
-  };
-
-  const toggleCompetition = (competition: string) => {
-    setOpenCompetitions(prev => ({
-      ...prev,
-      [competition]: !prev[competition]
-    }));
   };
 
   // Convert API data to our component format
@@ -93,34 +75,11 @@ export function LiveScores() {
 
   const convertedMatches = matches.map(convertMatch);
   
-  // Group matches by competition
-  const groupedMatches: GroupedMatches = convertedMatches.reduce((acc, match) => {
-    const competition = match.competition;
-    
-    if (!acc[competition]) {
-      acc[competition] = { live: [], other: [], total: 0 };
-    }
-    
-    if (match.status === 'live') {
-      acc[competition].live.push(match);
-    } else {
-      acc[competition].other.push(match);
-    }
-    
-    acc[competition].total = acc[competition].live.length + acc[competition].other.length;
-    
-    return acc;
-  }, {} as GroupedMatches);
+  // Separate live and other matches
+  const liveMatches = convertedMatches.filter(match => match.status === 'live');
+  const otherMatches = convertedMatches.filter(match => match.status !== 'live');
 
-  const competitionEntries = Object.entries(groupedMatches).sort(([, a], [, b]) => {
-    // Sort by live matches first, then by total matches
-    if (a.live.length !== b.live.length) {
-      return b.live.length - a.live.length;
-    }
-    return b.total - a.total;
-  });
-
-  if (competitionEntries.length === 0) {
+  if (convertedMatches.length === 0) {
     return (
       <div className="space-y-4">
         <Card className="p-6 shadow-card">
@@ -138,83 +97,53 @@ export function LiveScores() {
   }
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-4">
       <div className="flex items-center justify-between">
         <h2 className="text-lg font-bold text-foreground">
-          Partite per Campionato
+          Serie A - Partite
         </h2>
         <Button variant="ghost" size="sm" onClick={handleRefresh} className="p-2">
           <RefreshCw className="w-4 h-4" />
         </Button>
       </div>
 
-      {competitionEntries.map(([competition, competitionMatches]) => {
-        const isOpen = openCompetitions[competition] ?? false;
-        const hasLiveMatches = competitionMatches.live.length > 0;
-        
-        return (
-          <Card key={competition} className="overflow-hidden shadow-card">
-            <Collapsible open={isOpen} onOpenChange={() => toggleCompetition(competition)}>
-              <CollapsibleTrigger className="w-full">
-                <div className="flex items-center justify-between p-4 hover:bg-muted/30 transition-colors border-b border-border/50">
-                  <div className="flex items-center space-x-3">
-                    <div className="flex items-center space-x-2">
-                      {isOpen ? (
-                        <ChevronDown className="w-4 h-4 text-primary" />
-                      ) : (
-                        <ChevronRight className="w-4 h-4 text-muted-foreground" />
-                      )}
-                      <h3 className="font-bold text-foreground text-left">{competition}</h3>
-                    </div>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    {hasLiveMatches && (
-                      <Badge variant="destructive" className="text-xs px-2 py-1 animate-pulse">
-                        {competitionMatches.live.length} LIVE
-                      </Badge>
-                    )}
-                    <span className="text-sm text-muted-foreground font-medium">
-                      {competitionMatches.total} partite
-                    </span>
-                  </div>
-                </div>
-              </CollapsibleTrigger>
-              <CollapsibleContent>
-                <div className="bg-muted/20">
-                  {/* Live matches first */}
-                  {competitionMatches.live.length > 0 && (
-                    <div className="p-3 space-y-2">
-                      <div className="flex items-center space-x-2 mb-2">
-                        <div className="w-2 h-2 bg-primary rounded-full animate-pulse" />
-                        <span className="text-sm font-bold text-primary uppercase tracking-wide">In Diretta</span>
-                      </div>
-                      {competitionMatches.live.map((match) => (
-                        <MatchCard key={match.id} match={match} />
-                      ))}
-                    </div>
-                  )}
-                  
-                  {/* Other matches */}
-                  {competitionMatches.other.length > 0 && (
-                    <div className="p-3 space-y-2">
-                      {competitionMatches.live.length > 0 && (
-                        <div className="flex items-center space-x-2 mb-2 pt-3 border-t border-border/30">
-                          <span className="text-sm font-bold text-muted-foreground uppercase tracking-wide">
-                            Altre partite
-                          </span>
-                        </div>
-                      )}
-                      {competitionMatches.other.map((match) => (
-                        <MatchCard key={match.id} match={match} />
-                      ))}
-                    </div>
-                  )}
-                </div>
-              </CollapsibleContent>
-            </Collapsible>
-          </Card>
-        );
-      })}
+      {/* Live matches */}
+      {liveMatches.length > 0 && (
+        <Card className="p-4 shadow-card">
+          <div className="flex items-center space-x-2 mb-3">
+            <div className="w-2 h-2 bg-primary rounded-full animate-pulse" />
+            <Badge variant="destructive" className="text-xs px-2 py-1 animate-pulse">
+              {liveMatches.length} LIVE
+            </Badge>
+            <span className="text-sm font-bold text-primary uppercase tracking-wide">
+              In Diretta
+            </span>
+          </div>
+          <div className="space-y-2">
+            {liveMatches.map((match) => (
+              <MatchCard key={match.id} match={match} />
+            ))}
+          </div>
+        </Card>
+      )}
+      
+      {/* Other matches */}
+      {otherMatches.length > 0 && (
+        <Card className="p-4 shadow-card">
+          {liveMatches.length > 0 && (
+            <div className="flex items-center space-x-2 mb-3">
+              <span className="text-sm font-bold text-muted-foreground uppercase tracking-wide">
+                Altre partite
+              </span>
+            </div>
+          )}
+          <div className="space-y-2">
+            {otherMatches.map((match) => (
+              <MatchCard key={match.id} match={match} />
+            ))}
+          </div>
+        </Card>
+      )}
     </div>
   );
 }
