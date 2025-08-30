@@ -3,7 +3,10 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/co
 import { Bell, X } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { useState } from "react";
+import { useState, useEffect, useMemo } from "react";
+import { useFootballData } from "@/hooks/useFootballData";
+import { format, isToday, differenceInMinutes } from "date-fns";
+import { it } from "date-fns/locale";
 
 interface Notification {
   id: string;
@@ -13,42 +16,110 @@ interface Notification {
   isRead: boolean;
 }
 
-const mockNotifications: Notification[] = [
-  {
-    id: "1",
-    title: "Gol di Lautaro!",
-    message: "Inter - Milan: Lautaro Martinez segna al 78'!",
-    time: "2 min fa",
-    isRead: false,
-  },
-  {
-    id: "2",
-    title: "Partita iniziata",
-    message: "Juventus vs Roma è iniziata",
-    time: "15 min fa",
-    isRead: false,
-  },
-  {
-    id: "3",
-    title: "Risultato finale",
-    message: "Napoli 2-1 Atalanta - Partita terminata",
-    time: "1h fa",
-    isRead: true,
-  },
-];
-
 export function NotificationsPanel() {
-  const [notifications, setNotifications] = useState(mockNotifications);
-  const unreadCount = notifications.filter(n => !n.isRead).length;
+  const { matches, loading } = useFootballData();
+  const [readNotifications, setReadNotifications] = useState<Set<string>>(new Set());
+
+  const notifications = useMemo(() => {
+    if (!matches) return [];
+
+    const notifs: Notification[] = [];
+
+    matches.forEach((match) => {
+      const matchDate = new Date(match.utcDate);
+      const now = new Date();
+      const minutesDiff = differenceInMinutes(now, matchDate);
+
+      // Partite live
+      if (match.status === 'IN_PLAY') {
+        notifs.push({
+          id: `live-${match.id}`,
+          title: "🔴 Partita in corso",
+          message: `${match.homeTeam.name} vs ${match.awayTeam.name}`,
+          time: "Live",
+          isRead: readNotifications.has(`live-${match.id}`)
+        });
+      }
+
+      // Partite iniziate di recente (ultimi 120 minuti)
+      if (match.status === 'IN_PLAY' && minutesDiff <= 120) {
+        notifs.push({
+          id: `started-${match.id}`,
+          title: "⚽ Partita iniziata",
+          message: `${match.homeTeam.name} - ${match.awayTeam.name} è iniziata`,
+          time: `${minutesDiff} min fa`,
+          isRead: readNotifications.has(`started-${match.id}`)
+        });
+      }
+
+      // Partite finite di recente (ultimi 180 minuti)
+      if (match.status === 'FINISHED' && minutesDiff <= 180) {
+        const homeScore = match.score.fullTime.home || 0;
+        const awayScore = match.score.fullTime.away || 0;
+        
+        notifs.push({
+          id: `finished-${match.id}`,
+          title: "🏁 Risultato finale",
+          message: `${match.homeTeam.name} ${homeScore}-${awayScore} ${match.awayTeam.name}`,
+          time: `${Math.floor(minutesDiff / 60)}h fa`,
+          isRead: readNotifications.has(`finished-${match.id}`)
+        });
+      }
+
+      // Partite con gol (se il punteggio è cambiato)
+      if (match.status === 'IN_PLAY' && (match.score.fullTime.home > 0 || match.score.fullTime.away > 0)) {
+        const homeScore = match.score.fullTime.home || 0;
+        const awayScore = match.score.fullTime.away || 0;
+        
+        if (homeScore > 0) {
+          notifs.push({
+            id: `goal-home-${match.id}-${homeScore}`,
+            title: "⚽ GOL!",
+            message: `${match.homeTeam.name} segna! ${homeScore}-${awayScore}`,
+            time: "Poco fa",
+            isRead: readNotifications.has(`goal-home-${match.id}-${homeScore}`)
+          });
+        }
+        
+        if (awayScore > 0) {
+          notifs.push({
+            id: `goal-away-${match.id}-${awayScore}`,
+            title: "⚽ GOL!",
+            message: `${match.awayTeam.name} segna! ${homeScore}-${awayScore}`,
+            time: "Poco fa",
+            isRead: readNotifications.has(`goal-away-${match.id}-${awayScore}`)
+          });
+        }
+      }
+    });
+
+    // Ordina per importanza: live prima, poi per tempo
+    return notifs.sort((a, b) => {
+      if (a.time === "Live" && b.time !== "Live") return -1;
+      if (b.time === "Live" && a.time !== "Live") return 1;
+      if (!a.isRead && b.isRead) return -1;
+      if (!b.isRead && a.isRead) return 1;
+      return 0;
+    }).slice(0, 10); // Limita a 10 notifiche più recenti
+
+  }, [matches, readNotifications]);
+
+  const [allNotifications, setAllNotifications] = useState<Notification[]>([]);
+  useEffect(() => {
+    if (notifications.length > 0) {
+      setAllNotifications(notifications);
+    }
+  }, [notifications]);
+
+  const unreadCount = allNotifications.filter(n => !n.isRead).length;
 
   const markAsRead = (id: string) => {
-    setNotifications(prev => 
-      prev.map(n => n.id === id ? { ...n, isRead: true } : n)
-    );
+    setReadNotifications(prev => new Set([...prev, id]));
   };
 
   const clearAll = () => {
-    setNotifications(prev => prev.map(n => ({ ...n, isRead: true })));
+    const allIds = allNotifications.map(n => n.id);
+    setReadNotifications(prev => new Set([...prev, ...allIds]));
   };
 
   return (
@@ -77,12 +148,16 @@ export function NotificationsPanel() {
         </SheetHeader>
         <ScrollArea className="h-full mt-4">
           <div className="space-y-3">
-            {notifications.length === 0 ? (
+            {loading ? (
               <p className="text-muted-foreground text-center py-8">
-                Nessuna notifica
+                Caricamento notifiche...
+              </p>
+            ) : allNotifications.length === 0 ? (
+              <p className="text-muted-foreground text-center py-8">
+                Nessuna notifica disponibile
               </p>
             ) : (
-              notifications.map((notification) => (
+              allNotifications.map((notification) => (
                 <div
                   key={notification.id}
                   className={`p-3 rounded-lg border cursor-pointer transition-colors ${
