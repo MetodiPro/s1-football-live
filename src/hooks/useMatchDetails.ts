@@ -1,9 +1,8 @@
-
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 
 export interface Player {
-  id: number;
+  id: string;
   name: string;
   photo?: string;
   pos?: string;
@@ -12,7 +11,7 @@ export interface Player {
 
 export interface Lineup {
   team: {
-    id: number;
+    id: string;
     name: string;
     logo: string;
   };
@@ -31,16 +30,16 @@ export interface Event {
     extra?: number;
   };
   team: {
-    id: number;
+    id: string;
     name: string;
     logo: string;
   };
   player: {
-    id: number;
+    id: string;
     name: string;
   };
   assist?: {
-    id: number;
+    id: string;
     name: string;
   };
   type: string;
@@ -50,7 +49,7 @@ export interface Event {
 
 export interface Statistics {
   team: {
-    id: number;
+    id: string;
     name: string;
     logo: string;
   };
@@ -62,7 +61,7 @@ export interface Statistics {
 
 export interface MatchDetails {
   fixture: {
-    id: number;
+    id: string;
     referee?: string;
     timezone: string;
     date: string;
@@ -72,7 +71,7 @@ export interface MatchDetails {
       second?: number;
     };
     venue: {
-      id?: number;
+      id?: string;
       name?: string;
       city?: string;
     };
@@ -83,7 +82,7 @@ export interface MatchDetails {
     };
   };
   league: {
-    id: number;
+    id: string;
     name: string;
     country: string;
     logo: string;
@@ -93,13 +92,13 @@ export interface MatchDetails {
   };
   teams: {
     home: {
-      id: number;
+      id: string;
       name: string;
       logo: string;
       winner?: boolean;
     };
     away: {
-      id: number;
+      id: string;
       name: string;
       logo: string;
       winner?: boolean;
@@ -148,11 +147,11 @@ export const useMatchDetails = (matchId: string) => {
       setLoading(true);
       setError(null);
 
-      console.log(`Fetching match details for ID: ${matchId} from API-Football`);
+      console.log(`Fetching match details for ID: ${matchId} from TheSportsDB`);
 
       // Fetch basic match details
-      const { data: matchData, error: matchError } = await supabase.functions.invoke('api-football', {
-        body: { endpoint: `fixtures?id=${matchId}` }
+      const { data: matchData, error: matchError } = await supabase.functions.invoke('thesportsdb', {
+        body: { endpoint: `lookupevent.php?id=${matchId}` }
       });
 
       if (matchError) {
@@ -160,69 +159,237 @@ export const useMatchDetails = (matchId: string) => {
         throw new Error(matchError.message);
       }
 
-      if (matchData.errors && matchData.errors.length > 0) {
-        console.error('API errors:', matchData.errors);
-        throw new Error('Errore nel recupero dati partita');
+      if (matchData.error) {
+        throw new Error(matchData.error);
       }
 
-      if (!matchData.response || matchData.response.length === 0) {
+      if (!matchData.events || matchData.events.length === 0) {
         throw new Error('Partita non trovata');
       }
 
-      const match = matchData.response[0];
-      console.log('Match details from API-Football:', match);
-      setMatchDetails(match);
+      const event = matchData.events[0];
+      console.log('Match details from TheSportsDB:', event);
 
-      // Fetch lineups if match is finished or live
-      if (match.fixture.status.short === 'FT' || match.fixture.status.short === '1H' || match.fixture.status.short === '2H' || match.fixture.status.short === 'HT') {
+      // Transform TheSportsDB event to our format
+      const transformedMatch: MatchDetails = {
+        fixture: {
+          id: event.idEvent,
+          referee: event.strOfficial,
+          timezone: 'Europe/Rome',
+          date: event.strTimestamp || event.dateEvent + 'T' + (event.strTime || '00:00:00'),
+          timestamp: new Date(event.strTimestamp || event.dateEvent).getTime() / 1000,
+          periods: {
+            first: null,
+            second: null,
+          },
+          venue: {
+            id: event.idVenue,
+            name: event.strVenue,
+            city: event.strCity,
+          },
+          status: {
+            long: getStatusLong(event.strStatus || 'Not Started'),
+            short: getStatusShort(event.strStatus || 'Not Started'),
+            elapsed: event.intSpectators ? undefined : undefined,
+          },
+        },
+        league: {
+          id: event.idLeague || '4332',
+          name: event.strLeague || 'Serie A',
+          country: 'Italy',
+          logo: event.strLeagueBadge || '',
+          flag: 'https://www.thesportsdb.com/images/media/league/badge/64049016687289.png',
+          season: 2024,
+          round: `Round ${event.intRound || 'Unknown'}`,
+        },
+        teams: {
+          home: {
+            id: event.idHomeTeam,
+            name: event.strHomeTeam,
+            logo: event.strHomeTeamBadge || '',
+            winner: event.intHomeScore && event.intAwayScore ? 
+              parseInt(event.intHomeScore) > parseInt(event.intAwayScore) : undefined,
+          },
+          away: {
+            id: event.idAwayTeam,
+            name: event.strAwayTeam,
+            logo: event.strAwayTeamBadge || '',
+            winner: event.intHomeScore && event.intAwayScore ? 
+              parseInt(event.intAwayScore) > parseInt(event.intHomeScore) : undefined,
+          },
+        },
+        goals: {
+          home: event.intHomeScore ? parseInt(event.intHomeScore) : undefined,
+          away: event.intAwayScore ? parseInt(event.intAwayScore) : undefined,
+        },
+        score: {
+          halftime: {
+            home: event.intHomeScore ? parseInt(event.intHomeScore) : undefined,
+            away: event.intAwayScore ? parseInt(event.intAwayScore) : undefined,
+          },
+          fulltime: {
+            home: event.intHomeScore ? parseInt(event.intHomeScore) : undefined,
+            away: event.intAwayScore ? parseInt(event.intAwayScore) : undefined,
+          },
+          extratime: {
+            home: undefined,
+            away: undefined,
+          },
+          penalty: {
+            home: undefined,
+            away: undefined,
+          },
+        },
+      };
+
+      setMatchDetails(transformedMatch);
+
+      // Fetch additional data if match is finished or live
+      const status = event.strStatus;
+      if (status === 'Match Finished' || status === 'FT') {
         try {
-          const { data: lineupsData } = await supabase.functions.invoke('api-football', {
-            body: { endpoint: `fixtures/lineups?fixture=${matchId}` }
+          // Fetch events timeline
+          const { data: eventsData } = await supabase.functions.invoke('thesportsdb', {
+            body: { endpoint: `lookupeventtimeline.php?id=${matchId}` }
           });
           
-          if (lineupsData.response) {
-            console.log('Lineups data:', lineupsData.response);
-            setLineups(lineupsData.response);
+          if (eventsData.timeline) {
+            const transformedEvents = eventsData.timeline.map((timeline: any) => ({
+              time: {
+                elapsed: parseInt(timeline.intTime) || 0,
+              },
+              team: {
+                id: timeline.idTeam,
+                name: timeline.strTeamBadge?.includes('Home') ? event.strHomeTeam : event.strAwayTeam,
+                logo: timeline.idTeam === event.idHomeTeam ? event.strHomeTeamBadge : event.strAwayTeamBadge,
+              },
+              player: {
+                id: timeline.idPlayer || '',
+                name: timeline.strPlayer || '',
+              },
+              assist: timeline.strAssist ? {
+                id: '',
+                name: timeline.strAssist,
+              } : undefined,
+              type: timeline.strEvent || 'Unknown',
+              detail: timeline.strEvent || '',
+              comments: timeline.strComment,
+            }));
+            setEvents(transformedEvents);
+          }
+        } catch (err) {
+          console.log('Events timeline not available:', err);
+        }
+
+        try {
+          // Try to fetch lineup if available
+          const { data: lineupData } = await supabase.functions.invoke('thesportsdb', {
+            body: { endpoint: `lookuplineup.php?id=${matchId}` }
+          });
+          
+          if (lineupData.lineup) {
+            const homeLineup = lineupData.lineup.filter((player: any) => 
+              player.strTeam === event.strHomeTeam
+            );
+            const awayLineup = lineupData.lineup.filter((player: any) => 
+              player.strTeam === event.strAwayTeam
+            );
+
+            const transformedLineups = [
+              {
+                team: {
+                  id: event.idHomeTeam,
+                  name: event.strHomeTeam,
+                  logo: event.strHomeTeamBadge || '',
+                },
+                formation: homeLineup[0]?.strFormation || '4-4-2',
+                startXI: homeLineup.filter((p: any) => p.strPosition !== 'Substitute').map((player: any) => ({
+                  player: {
+                    id: player.idPlayer,
+                    name: player.strPlayer,
+                    pos: player.strPosition,
+                    number: parseInt(player.intSquadNumber) || undefined,
+                  },
+                })),
+                substitutes: homeLineup.filter((p: any) => p.strPosition === 'Substitute').map((player: any) => ({
+                  player: {
+                    id: player.idPlayer,
+                    name: player.strPlayer,
+                    pos: player.strPosition,
+                    number: parseInt(player.intSquadNumber) || undefined,
+                  },
+                })),
+              },
+              {
+                team: {
+                  id: event.idAwayTeam,
+                  name: event.strAwayTeam,
+                  logo: event.strAwayTeamBadge || '',
+                },
+                formation: awayLineup[0]?.strFormation || '4-4-2',
+                startXI: awayLineup.filter((p: any) => p.strPosition !== 'Substitute').map((player: any) => ({
+                  player: {
+                    id: player.idPlayer,
+                    name: player.strPlayer,
+                    pos: player.strPosition,
+                    number: parseInt(player.intSquadNumber) || undefined,
+                  },
+                })),
+                substitutes: awayLineup.filter((p: any) => p.strPosition === 'Substitute').map((player: any) => ({
+                  player: {
+                    id: player.idPlayer,
+                    name: player.strPlayer,
+                    pos: player.strPosition,
+                    number: parseInt(player.intSquadNumber) || undefined,
+                  },
+                })),
+              },
+            ];
+            setLineups(transformedLineups);
           }
         } catch (err) {
           console.log('Lineups not available:', err);
         }
-
-        // Fetch events
-        try {
-          const { data: eventsData } = await supabase.functions.invoke('api-football', {
-            body: { endpoint: `fixtures/events?fixture=${matchId}` }
-          });
-          
-          if (eventsData.response) {
-            console.log('Events data:', eventsData.response);
-            setEvents(eventsData.response);
-          }
-        } catch (err) {
-          console.log('Events not available:', err);
-        }
-
-        // Fetch statistics
-        try {
-          const { data: statsData } = await supabase.functions.invoke('api-football', {
-            body: { endpoint: `fixtures/statistics?fixture=${matchId}` }
-          });
-          
-          if (statsData.response) {
-            console.log('Statistics data:', statsData.response);
-            setStatistics(statsData.response);
-          }
-        } catch (err) {
-          console.log('Statistics not available:', err);
-        }
       }
 
     } catch (err) {
-      console.error('Error fetching match details from API-Football:', err);
+      console.error('Error fetching match details from TheSportsDB:', err);
       setError(err instanceof Error ? err.message : 'Impossibile recuperare i dettagli della partita');
     } finally {
       setLoading(false);
     }
+  };
+
+  const getStatusLong = (status: string): string => {
+    const statusMap: { [key: string]: string } = {
+      'Match Finished': 'Match Finished',
+      'Not Started': 'Not Started',
+      'In Play': 'In Play',
+      'Half Time': 'Half Time',
+      'Full Time': 'Match Finished',
+      'NS': 'Not Started',
+      'FT': 'Match Finished',
+      'HT': 'Half Time',
+      '1H': 'First Half',
+      '2H': 'Second Half'
+    };
+    return statusMap[status] || status;
+  };
+
+  const getStatusShort = (status: string): string => {
+    const statusMap: { [key: string]: string } = {
+      'Match Finished': 'FT',
+      'Not Started': 'NS',
+      'In Play': 'LIVE',
+      'Half Time': 'HT',
+      'Full Time': 'FT',
+      'NS': 'NS',
+      'FT': 'FT',
+      'HT': 'HT',
+      '1H': '1H',
+      '2H': '2H'
+    };
+    return statusMap[status] || 'NS';
   };
 
   useEffect(() => {

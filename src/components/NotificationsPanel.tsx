@@ -4,7 +4,7 @@ import { Bell, X } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useState, useEffect, useMemo } from "react";
-import { useFootballData } from "@/hooks/useFootballData";
+import { useSerieASchedule } from "@/hooks/useSerieASchedule";
 import { format, isToday, differenceInMinutes } from "date-fns";
 import { it } from "date-fns/locale";
 
@@ -17,7 +17,7 @@ interface Notification {
 }
 
 export function NotificationsPanel() {
-  const { matches, loading } = useFootballData();
+  const { matches, loading } = useSerieASchedule();
   const [readNotifications, setReadNotifications] = useState<Set<string>>(new Set());
 
   const notifications = useMemo(() => {

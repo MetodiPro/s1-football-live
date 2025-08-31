@@ -4,7 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 export interface TeamStanding {
   position: number;
   team: {
-    id: number;
+    id: string;
     name: string;
     crest?: string;
     shortName?: string;
@@ -40,12 +40,16 @@ export const useSerieAStandings = () => {
       setLoading(true);
       setError(null);
 
-      console.log('Fetching Serie A standings...');
+      // Serie A ID in TheSportsDB is 4332
+      const leagueId = '4332';
+      const currentSeason = '2024-2025';
+
+      console.log('Fetching Serie A standings from TheSportsDB...');
       
-      const { data, error: functionError } = await supabase.functions.invoke('football-data', {
-        body: { 
-          endpoint: 'competitions/SA/standings' 
-        }
+      const endpoint = `lookuptable.php?l=${leagueId}&s=${currentSeason}`;
+      
+      const { data, error: functionError } = await supabase.functions.invoke('thesportsdb', {
+        body: { endpoint }
       });
 
       if (functionError) {
@@ -58,11 +62,32 @@ export const useSerieAStandings = () => {
 
       console.log('Serie A Standings Response:', data);
 
-      // Football-Data API returns standings in this structure
-      const standingsData = data.standings?.[0]?.table || [];
-      
-      setStandings(standingsData);
-      setSeason(data.season);
+      // Transform TheSportsDB table to our format
+      const transformedStandings = (data.table || []).map((team: any, index: number) => ({
+        position: parseInt(team.intRank) || index + 1,
+        team: {
+          id: team.idTeam,
+          name: team.strTeam,
+          crest: team.strTeamBadge,
+          shortName: team.strTeam
+        },
+        playedGames: parseInt(team.intPlayed) || 0,
+        form: team.strForm,
+        won: parseInt(team.intWin) || 0,
+        draw: parseInt(team.intDraw) || 0,
+        lost: parseInt(team.intLoss) || 0,
+        points: parseInt(team.intPoints) || 0,
+        goalsFor: parseInt(team.intGoalsFor) || 0,
+        goalsAgainst: parseInt(team.intGoalsAgainst) || 0,
+        goalDifference: parseInt(team.intGoalDifference) || 0
+      }));
+
+      setStandings(transformedStandings);
+      setSeason({
+        startDate: '2024-08-15',
+        endDate: '2025-05-25',
+        currentMatchday: getCurrentRound()
+      });
 
     } catch (err) {
       console.error('Error fetching Serie A standings:', err);
@@ -70,6 +95,13 @@ export const useSerieAStandings = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const getCurrentRound = () => {
+    const now = new Date();
+    const seasonStart = new Date('2024-08-15');
+    const weeksPassed = Math.floor((now.getTime() - seasonStart.getTime()) / (1000 * 60 * 60 * 24 * 7));
+    return Math.max(1, Math.min(38, weeksPassed + 1));
   };
 
   useEffect(() => {
