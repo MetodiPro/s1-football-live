@@ -139,7 +139,7 @@ export const useMatchDetails = (matchId: string) => {
   // Fetch match details from Football-Data.org
   const { data: matchData, loading: matchLoading, error: matchError } = useFootballDataOrg(`matches/${matchId}`);
 
-  // Since Football-Data.org free tier doesn't provide detailed events, we'll create mock events for testing
+  // Since Football-Data.org free tier doesn't provide detailed events (goals, cards, lineups, etc.)
   useEffect(() => {
     if (matchData) {
       console.log('Match details from Football-Data.org:', matchData);
@@ -216,48 +216,9 @@ export const useMatchDetails = (matchId: string) => {
 
       setMatchDetails(transformedMatch);
 
-      // Generate mock events based on the score (since free API doesn't provide events)
-      if (matchData.score.fullTime.home !== null && matchData.score.fullTime.away !== null) {
-        const mockEvents: Event[] = [];
-        
-        // Generate home team goals
-        for (let i = 0; i < matchData.score.fullTime.home; i++) {
-          mockEvents.push({
-            time: { elapsed: 15 + (i * 20) },
-            team: {
-              id: matchData.homeTeam.id.toString(),
-              name: matchData.homeTeam.name,
-              logo: matchData.homeTeam.crest || '',
-            },
-            player: {
-              id: `player_home_${i}`,
-              name: `Giocatore ${matchData.homeTeam.shortName} ${i + 1}`,
-            },
-            type: 'goal',
-            detail: 'Normal Goal',
-          });
-        }
-
-        // Generate away team goals
-        for (let i = 0; i < matchData.score.fullTime.away; i++) {
-          mockEvents.push({
-            time: { elapsed: 25 + (i * 25) },
-            team: {
-              id: matchData.awayTeam.id.toString(),
-              name: matchData.awayTeam.name,
-              logo: matchData.awayTeam.crest || '',
-            },
-            player: {
-              id: `player_away_${i}`,
-              name: `Giocatore ${matchData.awayTeam.shortName} ${i + 1}`,
-            },
-            type: 'goal',
-            detail: 'Normal Goal',
-          });
-        }
-
-        setEvents(mockEvents);
-      }
+      // Note: Football-Data.org free tier doesn't provide match events (goals, cards, etc.)
+      // Events will remain empty unless using a paid subscription
+      setEvents([]);
 
       setError(null);
     } else if (matchError) {
