@@ -86,36 +86,62 @@ export function LiveScores() {
     );
   }
 
-  // Determine current or last completed matchday
-  const getCurrentMatchday = (): number => {
-    if (matches.length === 0) return 1;
+  // Determine matches for today or next upcoming matches
+  const getTodaysMatches = (): ScheduleMatch[] => {
+    if (matches.length === 0) return [];
     
-    // First, check if there are live matches
-    const liveMatches = matches.filter(match => 
-      match.status === 'IN_PLAY' || match.status === 'PAUSED'
-    );
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
     
-    if (liveMatches.length > 0) {
-      // Return the matchday of live matches
-      return Math.max(...liveMatches.map(match => match.matchday));
+    // First, check for matches today
+    const todaysMatches = matches.filter(match => {
+      const matchDate = new Date(match.utcDate);
+      matchDate.setHours(0, 0, 0, 0);
+      return matchDate.getTime() === today.getTime();
+    });
+    
+    if (todaysMatches.length > 0) {
+      return todaysMatches;
     }
     
-    // If no live matches, find the most recent completed matchday
-    const finishedMatches = matches.filter(match => match.status === 'FINISHED');
+    // If no matches today, find the next upcoming matches
+    const upcomingMatches = matches.filter(match => {
+      const matchDate = new Date(match.utcDate);
+      return matchDate > today && (match.status === 'NS' || match.status === 'TBD' || match.status === 'TIMED');
+    });
     
-    if (finishedMatches.length > 0) {
-      return Math.max(...finishedMatches.map(match => match.matchday));
+    if (upcomingMatches.length > 0) {
+      // Get matches from the earliest upcoming date
+      const earliestDate = new Date(Math.min(...upcomingMatches.map(match => new Date(match.utcDate).getTime())));
+      earliestDate.setHours(0, 0, 0, 0);
+      
+      return upcomingMatches.filter(match => {
+        const matchDate = new Date(match.utcDate);
+        matchDate.setHours(0, 0, 0, 0);
+        return matchDate.getTime() === earliestDate.getTime();
+      });
     }
     
-    // If no finished matches, get the most recent matchday
-    return Math.max(...matches.map(match => match.matchday));
+    // If no upcoming matches, show the most recent matches
+    const recentMatches = matches.filter(match => match.status === 'FT' || match.status === 'FINISHED');
+    if (recentMatches.length > 0) {
+      const latestDate = new Date(Math.max(...recentMatches.map(match => new Date(match.utcDate).getTime())));
+      latestDate.setHours(0, 0, 0, 0);
+      
+      return recentMatches.filter(match => {
+        const matchDate = new Date(match.utcDate);
+        matchDate.setHours(0, 0, 0, 0);
+        return matchDate.getTime() === latestDate.getTime();
+      });
+    }
+    
+    return [];
   };
 
-  const currentMatchday = getCurrentMatchday();
-  
-  // Filter matches for current matchday only
-  const currentMatchdayMatches = matches.filter(match => match.matchday === currentMatchday);
-  const convertedMatches = currentMatchdayMatches.map(convertMatch);
+  const currentMatches = getTodaysMatches();
+  const convertedMatches = currentMatches.map(convertMatch);
   
   // Separate live and other matches
   const liveMatches = convertedMatches.filter(match => match.status === 'live');
@@ -143,10 +169,18 @@ export function LiveScores() {
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-lg font-bold text-foreground">
-            Serie A - Giornata {currentMatchday}
+            Serie A - {currentMatches.length > 0 ? 
+              `${new Date(currentMatches[0].utcDate).toLocaleDateString('it-IT', { 
+                day: 'numeric', 
+                month: 'long' 
+              })}` : 
+              'Prossime Partite'
+            }
           </h2>
           <p className="text-sm text-muted-foreground">
-            {liveMatches.length > 0 ? 'In corso' : 'Completata'}
+            {liveMatches.length > 0 ? 'In corso' : 
+             convertedMatches.some(m => m.status === 'finished') ? 'Completate' : 
+             'Programmate'}
           </p>
         </div>
         <Button variant="ghost" size="sm" onClick={handleRefresh} className="p-2">
