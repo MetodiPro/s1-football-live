@@ -86,62 +86,71 @@ export function LiveScores() {
     );
   }
 
-  // Determine matches for today or next upcoming matches
-  const getTodaysMatches = (): ScheduleMatch[] => {
-    if (matches.length === 0) return [];
+  // Determine current matchday (ongoing round with mix of played/unplayed matches)
+  const getCurrentMatchday = (): number => {
+    if (matches.length === 0) return 1;
     
     const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const tomorrow = new Date(today);
-    tomorrow.setDate(tomorrow.getDate() + 1);
     
-    // First, check for matches today
-    const todaysMatches = matches.filter(match => {
-      const matchDate = new Date(match.utcDate);
-      matchDate.setHours(0, 0, 0, 0);
-      return matchDate.getTime() === today.getTime();
-    });
+    // First, check if there are live matches
+    const liveMatches = matches.filter(match => 
+      match.status === 'LIVE' || match.status === 'IN_PLAY' || match.status === 'PAUSED'
+    );
     
-    if (todaysMatches.length > 0) {
-      return todaysMatches;
+    if (liveMatches.length > 0) {
+      return Math.max(...liveMatches.map(match => match.matchday));
     }
     
-    // If no matches today, find the next upcoming matches
-    const upcomingMatches = matches.filter(match => {
-      const matchDate = new Date(match.utcDate);
-      return matchDate > today && (match.status === 'NS' || match.status === 'TBD' || match.status === 'TIMED');
-    });
-    
-    if (upcomingMatches.length > 0) {
-      // Get matches from the earliest upcoming date
-      const earliestDate = new Date(Math.min(...upcomingMatches.map(match => new Date(match.utcDate).getTime())));
-      earliestDate.setHours(0, 0, 0, 0);
+    // Find matchdays with both finished and upcoming matches (current round)
+    const matchdayStats = matches.reduce((acc, match) => {
+      const matchday = match.matchday;
+      if (!acc[matchday]) {
+        acc[matchday] = { finished: 0, upcoming: 0, total: 0 };
+      }
+      acc[matchday].total++;
       
-      return upcomingMatches.filter(match => {
+      if (match.status === 'FT' || match.status === 'FINISHED') {
+        acc[matchday].finished++;
+      } else if (match.status === 'NS' || match.status === 'TBD' || match.status === 'TIMED') {
         const matchDate = new Date(match.utcDate);
-        matchDate.setHours(0, 0, 0, 0);
-        return matchDate.getTime() === earliestDate.getTime();
-      });
-    }
-    
-    // If no upcoming matches, show the most recent matches
-    const recentMatches = matches.filter(match => match.status === 'FT' || match.status === 'FINISHED');
-    if (recentMatches.length > 0) {
-      const latestDate = new Date(Math.max(...recentMatches.map(match => new Date(match.utcDate).getTime())));
-      latestDate.setHours(0, 0, 0, 0);
+        if (matchDate >= today) {
+          acc[matchday].upcoming++;
+        }
+      }
       
-      return recentMatches.filter(match => {
-        const matchDate = new Date(match.utcDate);
-        matchDate.setHours(0, 0, 0, 0);
-        return matchDate.getTime() === latestDate.getTime();
-      });
+      return acc;
+    }, {} as Record<number, {finished: number, upcoming: number, total: number}>);
+    
+    // Find the matchday that has both finished and upcoming matches (ongoing round)
+    for (const matchday of Object.keys(matchdayStats).map(Number).sort((a, b) => a - b)) {
+      const stats = matchdayStats[matchday];
+      if (stats.finished > 0 && stats.upcoming > 0) {
+        return matchday;
+      }
     }
     
-    return [];
+    // If no mixed matchday, find the most recent with upcoming matches
+    for (const matchday of Object.keys(matchdayStats).map(Number).sort((a, b) => a - b)) {
+      const stats = matchdayStats[matchday];
+      if (stats.upcoming > 0) {
+        return matchday;
+      }
+    }
+    
+    // If no upcoming matches, get the most recent completed matchday
+    const finishedMatchdays = Object.keys(matchdayStats)
+      .map(Number)
+      .filter(matchday => matchdayStats[matchday].finished > 0)
+      .sort((a, b) => b - a);
+      
+    return finishedMatchdays[0] || 1;
   };
 
-  const currentMatches = getTodaysMatches();
-  const convertedMatches = currentMatches.map(convertMatch);
+  const currentMatchday = getCurrentMatchday();
+  
+  // Get all matches for the current matchday
+  const currentMatchdayMatches = matches.filter(match => match.matchday === currentMatchday);
+  const convertedMatches = currentMatchdayMatches.map(convertMatch);
   
   // Separate live and other matches
   const liveMatches = convertedMatches.filter(match => match.status === 'live');
@@ -169,18 +178,12 @@ export function LiveScores() {
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-lg font-bold text-foreground">
-            Serie A - {currentMatches.length > 0 ? 
-              `${new Date(currentMatches[0].utcDate).toLocaleDateString('it-IT', { 
-                day: 'numeric', 
-                month: 'long' 
-              })}` : 
-              'Prossime Partite'
-            }
+            Serie A - Giornata {currentMatchday}
           </h2>
           <p className="text-sm text-muted-foreground">
             {liveMatches.length > 0 ? 'In corso' : 
-             convertedMatches.some(m => m.status === 'finished') ? 'Completate' : 
-             'Programmate'}
+             convertedMatches.some(m => m.status === 'upcoming') ? 'In corso' : 
+             'Completata'}
           </p>
         </div>
         <Button variant="ghost" size="sm" onClick={handleRefresh} className="p-2">
