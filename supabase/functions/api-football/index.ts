@@ -15,12 +15,11 @@ serve(async (req) => {
     
     console.log(`Making request to API-Football: ${endpoint}`);
 
-    const response = await fetch(`https://api-football-v1.p.rapidapi.com/v3/${endpoint}`, {
+    const response = await fetch(`https://v3.football.api-sports.io/${endpoint}`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
-        'X-RapidAPI-Key': '9cfaa42b3b0af2f9487a1623c84f5aa4',
-        'X-RapidAPI-Host': 'api-football-v1.p.rapidapi.com',
+        'x-apisports-key': '9cfaa42b3b0af2f9487a1623c84f5aa4',
       },
     });
 
