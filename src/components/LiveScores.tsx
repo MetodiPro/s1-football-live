@@ -2,12 +2,12 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { RefreshCw, AlertCircle } from "lucide-react";
 import { MatchCard } from "./MatchCard";
-import { useSerieAMatches } from "@/hooks/useSerieAMatches";
+import { useSerieASchedule, ScheduleMatch } from "@/hooks/useSerieASchedule";
 import { toast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
 
 export function LiveScores() {
-  const { matches, loading, error, refetch } = useSerieAMatches();
+  const { matches, loading, error, refetch } = useSerieASchedule();
 
   const handleRefresh = async () => {
     await refetch();
@@ -17,30 +17,41 @@ export function LiveScores() {
     });
   };
 
-  // Convert API-Football data to our component format
-  const convertMatch = (match: any) => ({
-    id: match.fixture.id.toString(),
-    homeTeam: { 
-      name: match.teams.home.name, 
-      logo: match.teams.home.logo, 
-      score: match.goals.home 
-    },
-    awayTeam: { 
-      name: match.teams.away.name, 
-      logo: match.teams.away.logo, 
-      score: match.goals.away 
-    },
-    competition: match.league.name,
-    status: (match.fixture.status.short === 'LIVE' || 
-             match.fixture.status.short === '1H' || 
-             match.fixture.status.short === '2H' ? 'live' : 
-             match.fixture.status.short === 'FT' ? 'finished' : 
-             'upcoming') as 'live' | 'finished' | 'upcoming',
-    time: match.fixture.status.short === 'NS' ? 
-          new Date(match.fixture.date).toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' }) : 
-          match.fixture.status.long,
-    minute: match.fixture.status.elapsed || undefined,
-  });
+  // Convert Football-Data API to our component format
+  const convertMatch = (match: ScheduleMatch) => {
+    const statusTranslations: Record<string, string> = {
+      'FINISHED': 'Finale',
+      'TIMED': 'Programmata',
+      'IN_PLAY': 'In Diretta',
+      'PAUSED': 'Intervallo',
+      'POSTPONED': 'Rimandata',
+      'CANCELLED': 'Annullata',
+      'SUSPENDED': 'Sospesa'
+    };
+
+    const isLive = match.status === 'IN_PLAY' || match.status === 'PAUSED';
+    const isFinished = match.status === 'FINISHED';
+    
+    return {
+      id: match.id.toString(),
+      homeTeam: { 
+        name: match.homeTeam.name, 
+        logo: match.homeTeam.crest || '', 
+        score: match.score.fullTime.home 
+      },
+      awayTeam: { 
+        name: match.awayTeam.name, 
+        logo: match.awayTeam.crest || '', 
+        score: match.score.fullTime.away 
+      },
+      competition: "Serie A",
+      status: (isLive ? 'live' : isFinished ? 'finished' : 'upcoming') as 'live' | 'finished' | 'upcoming',
+      time: isLive ? 'In Diretta' : 
+            isFinished ? 'Finale' : 
+            new Date(match.utcDate).toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' }),
+      minute: undefined,
+    };
+  };
 
   if (loading) {
     return (

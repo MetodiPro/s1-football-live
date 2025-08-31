@@ -1,16 +1,15 @@
 import { useParams, useNavigate } from "react-router-dom";
-import { ArrowLeft, Clock, Users, Trophy, Target, Calendar } from "lucide-react";
+import { ArrowLeft, Clock, Trophy, Target, Calendar } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
 import { useMatchDetails } from "@/hooks/useMatchDetails";
 import { Skeleton } from "@/components/ui/skeleton";
 
 const MatchDetails = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { matchDetails, events, lineups, loading, error } = useMatchDetails(id || '');
+  const { matchDetails, loading, error } = useMatchDetails(id || '');
 
   if (loading) {
     return (
@@ -45,8 +44,8 @@ const MatchDetails = () => {
   }
 
   const match = matchDetails;
-  const isLive = match.fixture?.status?.short === 'LIVE' || match.fixture?.status?.short === '1H' || match.fixture?.status?.short === '2H';
-  const isFinished = match.fixture?.status?.short === 'FT';
+  const isLive = match.status === 'IN_PLAY' || match.status === 'PAUSED';
+  const isFinished = match.status === 'FINISHED';
 
   return (
     <main className="container mx-auto px-4 py-6 space-y-6">
@@ -70,44 +69,41 @@ const MatchDetails = () => {
               className={isLive ? "bg-gradient-primary animate-pulse" : ""}
             >
               <Trophy className="w-3 h-3 mr-1" />
-              {match.league.name}
+              Serie A
             </Badge>
             <div className="flex items-center text-muted-foreground text-sm">
               <Clock className="w-4 h-4 mr-1" />
               {isFinished ? 'Finale' : 
-               isLive ? `${match.fixture?.status?.elapsed || 0}'` : 
-               match.fixture?.date ? new Date(match.fixture.date).toLocaleString('it-IT') : 'Data non disponibile'}
+               isLive ? 'In Diretta' : 
+               new Date(match.utcDate).toLocaleString('it-IT')}
             </div>
           </div>
 
           {/* Teams e Score */}
           <div className="grid grid-cols-3 items-center gap-4">
             {/* Home Team */}
-            <div className="text-center space-y-2">
-              <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto">
-                {match.teams.home.logo ? (
-                  <img 
-                    src={match.teams.home.logo} 
-                    alt={match.teams.home.name}
-                    className="w-10 h-10 object-contain"
-                  />
-                ) : (
-                  <span className="text-lg font-bold text-primary">
-                    {match.teams.home.name.substring(0, 3).toUpperCase()}
-                  </span>
-                )}
+            <div className="text-center">
+              <div className="w-16 h-16 mx-auto mb-2 flex items-center justify-center bg-muted rounded-full">
+                <img 
+                  src={match.homeTeam.crest} 
+                  alt={match.homeTeam.name}
+                  className="w-12 h-12 object-contain"
+                  onError={(e) => {
+                    e.currentTarget.style.display = 'none';
+                  }}
+                />
               </div>
-              <h3 className="font-semibold text-sm">{match.teams.home.name}</h3>
+              <h3 className="font-medium text-sm">{match.homeTeam.name}</h3>
             </div>
 
             {/* Score */}
             <div className="text-center">
-              {(isFinished || isLive) && match.goals?.home !== null ? (
+              {(isFinished || isLive) && match.score.fullTime.home !== null ? (
                 <div className="text-4xl font-bold text-primary">
-                  {match.goals.home} - {match.goals.away}
+                  {match.score.fullTime.home} - {match.score.fullTime.away}
                 </div>
               ) : (
-                <div className="text-2xl font-bold text-muted-foreground">
+                <div className="text-2xl font-medium text-muted-foreground">
                   VS
                 </div>
               )}
@@ -119,27 +115,24 @@ const MatchDetails = () => {
             </div>
 
             {/* Away Team */}
-            <div className="text-center space-y-2">
-              <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto">
-                {match.teams.away.logo ? (
-                  <img 
-                    src={match.teams.away.logo} 
-                    alt={match.teams.away.name}
-                    className="w-10 h-10 object-contain"
-                  />
-                ) : (
-                  <span className="text-lg font-bold text-primary">
-                    {match.teams.away.name.substring(0, 3).toUpperCase()}
-                  </span>
-                )}
+            <div className="text-center">
+              <div className="w-16 h-16 mx-auto mb-2 flex items-center justify-center bg-muted rounded-full">
+                <img 
+                  src={match.awayTeam.crest} 
+                  alt={match.awayTeam.name}
+                  className="w-12 h-12 object-contain"
+                  onError={(e) => {
+                    e.currentTarget.style.display = 'none';
+                  }}
+                />
               </div>
-              <h3 className="font-semibold text-sm">{match.teams.away.name}</h3>
+              <h3 className="font-medium text-sm">{match.awayTeam.name}</h3>
             </div>
           </div>
         </div>
       </Card>
 
-      {/* Dettagli aggiuntivi */}
+      {/* Dettagli risultato */}
       {match.score && (
         <Card className="shadow-card p-6">
           <h3 className="font-semibold mb-4 flex items-center">
@@ -147,19 +140,19 @@ const MatchDetails = () => {
             Risultato
           </h3>
           <div className="space-y-3">
-            {match.score.fulltime.home !== null && (
+            {match.score.fullTime.home !== null && (
               <div className="flex justify-between items-center">
                 <span className="text-muted-foreground">Tempo pieno:</span>
                 <span className="font-mono text-lg">
-                  {match.score.fulltime.home} - {match.score.fulltime.away}
+                  {match.score.fullTime.home} - {match.score.fullTime.away}
                 </span>
               </div>
             )}
-            {match.score.halftime?.home !== null && (
+            {match.score.halfTime?.home !== null && (
               <div className="flex justify-between items-center">
                 <span className="text-muted-foreground">Primo tempo:</span>
                 <span className="font-mono">
-                  {match.score.halftime.home} - {match.score.halftime.away}
+                  {match.score.halfTime.home} - {match.score.halfTime.away}
                 </span>
               </div>
             )}
@@ -173,132 +166,43 @@ const MatchDetails = () => {
           <Calendar className="w-4 h-4 mr-2" />
           Informazioni partita
         </h3>
-          <div className="space-y-3 text-sm">
+        <div className="space-y-3 text-sm">
           <div className="flex justify-between">
             <span className="text-muted-foreground">Data e ora:</span>
-            <span>{match.fixture?.date ? new Date(match.fixture.date).toLocaleString('it-IT') : 'Non disponibile'}</span>
+            <span>{new Date(match.utcDate).toLocaleString('it-IT')}</span>
           </div>
           <div className="flex justify-between">
             <span className="text-muted-foreground">Status:</span>
-            <Badge variant="outline">{match.fixture?.status?.long || 'Non disponibile'}</Badge>
+            <Badge variant="outline">
+              {match.status === 'FINISHED' ? 'Finale' : 
+               match.status === 'TIMED' ? 'Programmata' :
+               match.status === 'IN_PLAY' ? 'In Diretta' : match.status}
+            </Badge>
           </div>
-          {match.fixture?.venue && (
-            <div className="flex justify-between">
-              <span className="text-muted-foreground">Stadio:</span>
-              <span>{match.fixture.venue.name}</span>
-            </div>
-          )}
-          {match.fixture?.referee && (
+          <div className="flex justify-between">
+            <span className="text-muted-foreground">Giornata:</span>
+            <span>{match.matchday}ª</span>
+          </div>
+          {match.referees && match.referees.length > 0 && (
             <div className="flex justify-between">
               <span className="text-muted-foreground">Arbitro:</span>
-              <span>{match.fixture.referee}</span>
+              <span>{match.referees[0].name}</span>
             </div>
           )}
         </div>
       </Card>
 
-      {/* Eventi partita (gol, cartellini, sostituzioni) */}
-      {events && events.length > 0 && (
-        <Card className="shadow-card p-6">
-          <h3 className="font-semibold mb-4 flex items-center">
-            <Target className="w-4 h-4 mr-2" />
-            Eventi partita
-          </h3>
-          <div className="space-y-3">
-            {events.map((event, index) => (
-              <div key={index} className="flex justify-between items-center py-2 border-b border-border/50 last:border-b-0">
-                <div className="flex items-center space-x-3">
-                  <Badge variant="outline" className="text-xs">
-                    {event.time.elapsed}'
-                  </Badge>
-                  <div>
-                    <div className="font-medium text-sm">
-                      {event.type === 'Goal' ? '⚽' : 
-                       event.type === 'Card' ? (event.detail.includes('Yellow') ? '🟨' : '🟥') :
-                       event.type === 'subst' ? '🔄' : '📝'} {event.detail}
-                    </div>
-                    <div className="text-xs text-muted-foreground">
-                      {event.player.name}
-                      {event.assist && ` (Assist: ${event.assist.name})`}
-                    </div>
-                  </div>
-                </div>
-                <div className="text-xs text-muted-foreground">
-                  {event.team.name}
-                </div>
-              </div>
-            ))}
-          </div>
-        </Card>
-      )}
-
-      {/* Formazioni */}
-      {lineups && lineups.length > 0 && (
-        <Card className="shadow-card p-6">
-          <h3 className="font-semibold mb-4 flex items-center">
-            <Users className="w-4 h-4 mr-2" />
-            Formazioni
-          </h3>
-          <div className="grid gap-6">
-            {lineups.map((lineup, index) => (
-              <div key={index} className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-2">
-                    <img 
-                      src={lineup.team.logo} 
-                      alt={lineup.team.name}
-                      className="w-6 h-6"
-                    />
-                    <span className="font-medium">{lineup.team.name}</span>
-                  </div>
-                  <Badge variant="outline">{lineup.formation}</Badge>
-                </div>
-                
-                <div>
-                  <h4 className="font-medium text-sm mb-2">Titolari</h4>
-                  <div className="grid grid-cols-2 gap-2 text-sm">
-                    {lineup.startXI.map((player, playerIndex) => (
-                      <div key={playerIndex} className="flex items-center space-x-2">
-                        <Badge variant="outline" className="w-6 h-6 text-xs p-0 flex items-center justify-center">
-                          {player.player.number}
-                        </Badge>
-                        <span>{player.player.name}</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                <div>
-                  <h4 className="font-medium text-sm mb-2">Panchina</h4>
-                  <div className="grid grid-cols-2 gap-2 text-sm">
-                    {lineup.substitutes.map((player, playerIndex) => (
-                      <div key={playerIndex} className="flex items-center space-x-2">
-                        <Badge variant="outline" className="w-6 h-6 text-xs p-0 flex items-center justify-center">
-                          {player.player.number}
-                        </Badge>
-                        <span>{player.player.name}</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </Card>
-      )}
-
-      {/* Placeholder se non ci sono dati aggiuntivi */}
-      {(!events || events.length === 0) && (!lineups || lineups.length === 0) && (
-        <Card className="shadow-card p-6">
-          <h3 className="font-semibold mb-4 flex items-center">
-            <Users className="w-4 h-4 mr-2" />
-            Dettagli aggiuntivi
-          </h3>
-          <p className="text-muted-foreground text-sm">
-            Eventi e formazioni saranno disponibili per le partite in corso o finite.
-          </p>
-        </Card>
-      )}
+      {/* Nota sui dettagli aggiuntivi */}
+      <Card className="shadow-card p-6">
+        <h3 className="font-semibold mb-4 flex items-center">
+          <Target className="w-4 h-4 mr-2" />
+          Dettagli aggiuntivi
+        </h3>
+        <p className="text-muted-foreground text-sm">
+          L'app utilizza Football-Data API che fornisce risultati in tempo reale della stagione 2025-2026. 
+          Eventi dettagliati, formazioni e statistiche complete saranno disponibili con l'upgrade dell'API.
+        </p>
+      </Card>
     </main>
   );
 };
