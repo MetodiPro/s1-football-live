@@ -102,10 +102,10 @@ export const useSerieAMatches = () => {
       
       console.log(`Fetching Serie A matches from API-Football: ${dateFrom} to ${dateTo}`);
       
-      // Serie A ha league ID 135 in API-Football
+      // Serie A ha league ID 135 in API-Football - usando stagione 2023 per API gratuita
       const { data, error: functionError } = await supabase.functions.invoke('api-football', {
         body: { 
-          endpoint: `fixtures?league=135&season=2024&from=${dateFrom}&to=${dateTo}` 
+          endpoint: `fixtures?league=135&season=2023&from=${dateFrom}&to=${dateTo}` 
         }
       });
 
