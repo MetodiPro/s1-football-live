@@ -1,6 +1,6 @@
 
 import { useParams, useNavigate } from "react-router-dom";
-import { ArrowLeft, Clock, Trophy, Target, Calendar, MapPin } from "lucide-react";
+import { ArrowLeft, Clock, Trophy, Target, Calendar, MapPin, ArrowUpDown, AlertTriangle } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -186,11 +186,91 @@ const MatchDetails = () => {
       {/* Eventi della partita */}
       <MatchEvents events={events} />
 
+      {/* Statistiche */}
+      <MatchStatistics statistics={statistics} />
+
       {/* Formazioni */}
       <MatchLineups lineups={lineups} />
 
-      {/* Statistiche */}
-      <MatchStatistics statistics={statistics} />
+      {/* Sostituzioni e Cartellini */}
+      {events && events.length > 0 && (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {/* Sostituzioni */}
+          {events.filter(e => e.type.toLowerCase() === 'subst').length > 0 && (
+            <Card className="shadow-card p-6">
+              <h3 className="font-semibold mb-4 flex items-center">
+                <ArrowUpDown className="w-4 h-4 mr-2" />
+                Sostituzioni
+              </h3>
+              <div className="space-y-3">
+                {events
+                  .filter(e => e.type.toLowerCase() === 'subst')
+                  .sort((a, b) => a.time.elapsed - b.time.elapsed)
+                  .map((sub, index) => (
+                    <div key={index} className="flex items-center gap-3 p-3 bg-muted/30 rounded-lg">
+                      <Badge variant="outline" className="text-xs">
+                        {sub.time.elapsed}'
+                      </Badge>
+                      <div className="flex items-center gap-2">
+                        <img 
+                          src={sub.team.logo} 
+                          alt={sub.team.name}
+                          className="w-4 h-4"
+                        />
+                        <div className="text-sm">
+                          <div className="font-medium text-green-600">⬆ {sub.player.name}</div>
+                          {sub.assist && (
+                            <div className="text-muted-foreground">⬇ {sub.assist.name}</div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  ))
+                }
+              </div>
+            </Card>
+          )}
+
+          {/* Cartellini */}
+          {events.filter(e => e.type.toLowerCase() === 'card').length > 0 && (
+            <Card className="shadow-card p-6">
+              <h3 className="font-semibold mb-4 flex items-center">
+                <AlertTriangle className="w-4 h-4 mr-2" />
+                Disciplinari
+              </h3>
+              <div className="space-y-3">
+                {events
+                  .filter(e => e.type.toLowerCase() === 'card')
+                  .sort((a, b) => a.time.elapsed - b.time.elapsed)
+                  .map((card, index) => (
+                    <div key={index} className="flex items-center gap-3 p-3 bg-muted/30 rounded-lg">
+                      <Badge variant="outline" className="text-xs">
+                        {card.time.elapsed}'
+                      </Badge>
+                      <div className="flex items-center gap-2">
+                        <img 
+                          src={card.team.logo} 
+                          alt={card.team.name}
+                          className="w-4 h-4"
+                        />
+                        <div className="text-sm">
+                          <div className="font-medium">{card.player.name}</div>
+                          <Badge 
+                            variant={card.detail.toLowerCase().includes('red') ? "destructive" : "default"}
+                            className="text-xs mt-1"
+                          >
+                            {card.detail.toLowerCase().includes('red') ? '🟥 Rosso' : '🟨 Giallo'}
+                          </Badge>
+                        </div>
+                      </div>
+                    </div>
+                  ))
+                }
+              </div>
+            </Card>
+          )}
+        </div>
+      )}
 
       {/* Informazioni partita */}
       <Card className="shadow-card p-6">

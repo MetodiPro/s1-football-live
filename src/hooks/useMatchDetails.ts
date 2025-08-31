@@ -136,8 +136,11 @@ export const useMatchDetails = (matchId: string) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Fetch match details from API-Football
+  // Fetch multiple endpoints for complete match data
   const { data: matchData, loading: matchLoading, error: matchError } = useApiFootball(matchId ? `fixtures?id=${matchId}` : '');
+  const { data: lineupsData, loading: lineupsLoading } = useApiFootball(matchId ? `fixtures/lineups?fixture=${matchId}` : '');
+  const { data: eventsData, loading: eventsLoading } = useApiFootball(matchId ? `fixtures/events?fixture=${matchId}` : '');
+  const { data: statisticsData, loading: statisticsLoading } = useApiFootball(matchId ? `fixtures/statistics?fixture=${matchId}` : '');
 
   useEffect(() => {
     if (matchData && matchData.response && matchData.response[0]) {
@@ -215,19 +218,97 @@ export const useMatchDetails = (matchId: string) => {
       };
 
       setMatchDetails(transformedMatch);
-
-      // API-Football provides additional data but might require higher subscription
-      setEvents([]);
-      setLineups([]);
-      setStatistics([]);
-
       setError(null);
     } else if (matchError) {
       setError(matchError);
     }
-    
-    setLoading(matchLoading);
-  }, [matchData, matchLoading, matchError]);
+  }, [matchData, matchError]);
+
+  // Process lineups data
+  useEffect(() => {
+    if (lineupsData && lineupsData.response) {
+      console.log('Lineups from API-Football:', lineupsData);
+      const transformedLineups = lineupsData.response.map((lineup: any) => ({
+        team: {
+          id: lineup.team.id.toString(),
+          name: lineup.team.name,
+          logo: lineup.team.logo,
+        },
+        formation: lineup.formation,
+        startXI: lineup.startXI.map((player: any) => ({
+          player: {
+            id: player.player.id.toString(),
+            name: player.player.name,
+            photo: player.player.photo,
+            pos: player.player.pos,
+            number: player.player.number,
+          },
+        })),
+        substitutes: lineup.substitutes.map((player: any) => ({
+          player: {
+            id: player.player.id.toString(),
+            name: player.player.name,
+            photo: player.player.photo,
+            pos: player.player.pos,
+            number: player.player.number,
+          },
+        })),
+      }));
+      setLineups(transformedLineups);
+    }
+  }, [lineupsData]);
+
+  // Process events data
+  useEffect(() => {
+    if (eventsData && eventsData.response) {
+      console.log('Events from API-Football:', eventsData);
+      const transformedEvents = eventsData.response.map((event: any) => ({
+        time: {
+          elapsed: event.time.elapsed,
+          extra: event.time.extra,
+        },
+        team: {
+          id: event.team.id.toString(),
+          name: event.team.name,
+          logo: event.team.logo,
+        },
+        player: {
+          id: event.player.id.toString(),
+          name: event.player.name,
+        },
+        assist: event.assist ? {
+          id: event.assist.id.toString(),
+          name: event.assist.name,
+        } : undefined,
+        type: event.type,
+        detail: event.detail,
+        comments: event.comments,
+      }));
+      setEvents(transformedEvents);
+    }
+  }, [eventsData]);
+
+  // Process statistics data
+  useEffect(() => {
+    if (statisticsData && statisticsData.response) {
+      console.log('Statistics from API-Football:', statisticsData);
+      const transformedStats = statisticsData.response.map((stat: any) => ({
+        team: {
+          id: stat.team.id.toString(),
+          name: stat.team.name,
+          logo: stat.team.logo,
+        },
+        statistics: stat.statistics || [],
+      }));
+      setStatistics(transformedStats);
+    }
+  }, [statisticsData]);
+
+  // Update overall loading state
+  useEffect(() => {
+    const isLoading = matchLoading || lineupsLoading || eventsLoading || statisticsLoading;
+    setLoading(isLoading);
+  }, [matchLoading, lineupsLoading, eventsLoading, statisticsLoading]);
 
   const getStatusLong = (status: string): string => {
     const statusMap: { [key: string]: string } = {

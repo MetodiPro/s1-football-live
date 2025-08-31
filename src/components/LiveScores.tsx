@@ -86,17 +86,6 @@ export function LiveScores() {
     );
   }
 
-  console.log('🔍 Debug LiveScores:');
-  console.log('- matches length:', matches.length);
-  console.log('- loading:', loading);
-  console.log('- error:', error);
-  
-  if (matches.length > 0) {
-    console.log('- first match:', matches[0]);
-    console.log('- all match statuses:', [...new Set(matches.map(m => m.status))]);
-    console.log('- all matchdays:', [...new Set(matches.map(m => m.matchday))].sort((a, b) => a - b));
-  }
-
   // Determine current matchday (ongoing round with mix of played/unplayed matches)
   const getCurrentMatchday = (): number => {
     if (matches.length === 0) return 1;
@@ -158,14 +147,10 @@ export function LiveScores() {
   };
 
   const currentMatchday = getCurrentMatchday();
-  console.log('📅 Current matchday determined:', currentMatchday);
   
   // Get all matches for the current matchday
   const currentMatchdayMatches = matches.filter(match => match.matchday === currentMatchday);
-  console.log('🏆 Current matchday matches:', currentMatchdayMatches.length);
-  
   const convertedMatches = currentMatchdayMatches.map(convertMatch);
-  console.log('✅ Converted matches:', convertedMatches.length);
   
   // Separate live and other matches
   const liveMatches = convertedMatches.filter(match => match.status === 'live');
