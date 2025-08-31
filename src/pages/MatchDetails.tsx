@@ -9,6 +9,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { MatchLineups } from "@/components/match-details/MatchLineups";
 import { MatchEvents } from "@/components/match-details/MatchEvents";
 import { MatchStatistics } from "@/components/match-details/MatchStatistics";
+import { MatchScorers } from "@/components/match-details/MatchScorers";
 
 const MatchDetails = () => {
   const { id } = useParams<{ id: string }>();
@@ -174,6 +175,13 @@ const MatchDetails = () => {
           </div>
         </Card>
       )}
+
+      {/* Marcatori */}
+      <MatchScorers 
+        events={events} 
+        homeTeam={match.teams.home} 
+        awayTeam={match.teams.away} 
+      />
 
       {/* Eventi della partita */}
       <MatchEvents events={events} />
