@@ -6,6 +6,7 @@ const corsHeaders = {
 };
 
 serve(async (req) => {
+  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
@@ -15,15 +16,19 @@ serve(async (req) => {
     
     console.log(`Making request to API-Football: ${endpoint}`);
 
-    // Get API key from Supabase secrets
+    // Get API key from Supabase secrets with detailed logging
+    console.log('Attempting to read API_FOOTBALL_KEY from environment...');
     const apiKey = Deno.env.get('API_FOOTBALL_KEY');
     
+    // Debug: List all available environment variables (without values)
+    console.log('Available env variables:', Object.keys(Deno.env.toObject()));
+    
     if (!apiKey) {
-      console.error('API_FOOTBALL_KEY secret not found');
+      console.error('❌ API_FOOTBALL_KEY secret not found in environment');
       throw new Error('API-Football key not configured in secrets');
     }
     
-    console.log('API key loaded successfully');
+    console.log('✅ API key loaded successfully, length:', apiKey.length);
 
     const response = await fetch(`https://v3.football.api-sports.io/${endpoint}`, {
       method: 'GET',
