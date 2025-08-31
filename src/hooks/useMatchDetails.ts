@@ -138,16 +138,10 @@ export const useMatchDetails = (matchId: string) => {
 
   // Fetch match details from Football-Data.org
   const { data: matchData, loading: matchLoading, error: matchError } = useFootballDataOrg(`matches/${matchId}`);
-  
-  // Try to fetch match events (testing if this endpoint exists)
-  const { data: eventsData, loading: eventsLoading, error: eventsError } = useFootballDataOrg(`matches/${matchId}/events`);
 
   useEffect(() => {
-    console.log('Match data:', matchData);
-    console.log('Events data:', eventsData);
-    console.log('Events error:', eventsError);
-
     if (matchData) {
+      console.log('Match details from Football-Data.org:', matchData);
       // Transform Football-Data.org match to our format
       const transformedMatch: MatchDetails = {
         fixture: {
@@ -220,43 +214,19 @@ export const useMatchDetails = (matchId: string) => {
 
       setMatchDetails(transformedMatch);
 
-      // Try to process events data if available
-      if (eventsData && eventsData.events) {
-        const transformedEvents = eventsData.events.map((event: any) => ({
-          time: {
-            elapsed: event.minute || 0,
-            extra: event.extraTime,
-          },
-          team: {
-            id: event.team?.id?.toString() || '',
-            name: event.team?.name || '',
-            logo: event.team?.crest || '',
-          },
-          player: {
-            id: event.player?.id?.toString() || '',
-            name: event.player?.name || 'Giocatore sconosciuto',
-          },
-          assist: event.assist ? {
-            id: event.assist.id?.toString() || '',
-            name: event.assist.name || '',
-          } : undefined,
-          type: event.type || 'unknown',
-          detail: event.detail || '',
-          comments: event.comments,
-        }));
-        
-        setEvents(transformedEvents);
-      } else {
-        setEvents([]);
-      }
+      // Football-Data.org free tier doesn't provide match events/lineups/statistics
+      // These remain empty arrays
+      setEvents([]);
+      setLineups([]);
+      setStatistics([]);
 
       setError(null);
     } else if (matchError) {
       setError(matchError);
     }
     
-    setLoading(matchLoading || eventsLoading);
-  }, [matchData, eventsData, matchLoading, eventsLoading, matchError, eventsError]);
+    setLoading(matchLoading);
+  }, [matchData, matchLoading, matchError]);
 
   const getStatusLong = (status: string): string => {
     const statusMap: { [key: string]: string } = {
