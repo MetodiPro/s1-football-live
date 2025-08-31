@@ -1,8 +1,11 @@
+
 import { LiveScores } from "@/components/LiveScores";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 
 const Index = () => {
+  console.log('Index component is rendering');
+  
   return (
     <main className="container mx-auto px-4 py-6 space-y-6">
       {/* Hero Image */}
