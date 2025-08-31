@@ -1,15 +1,19 @@
+
 import { useParams, useNavigate } from "react-router-dom";
-import { ArrowLeft, Clock, Trophy, Target, Calendar } from "lucide-react";
+import { ArrowLeft, Clock, Trophy, Target, Calendar, MapPin } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useMatchDetails } from "@/hooks/useMatchDetails";
 import { Skeleton } from "@/components/ui/skeleton";
+import { MatchLineups } from "@/components/match-details/MatchLineups";
+import { MatchEvents } from "@/components/match-details/MatchEvents";
+import { MatchStatistics } from "@/components/match-details/MatchStatistics";
 
 const MatchDetails = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { matchDetails, loading, error } = useMatchDetails(id || '');
+  const { matchDetails, lineups, events, statistics, loading, error } = useMatchDetails(id || '');
 
   if (loading) {
     return (
@@ -50,8 +54,9 @@ const MatchDetails = () => {
   }
 
   const match = matchDetails;
-  const isLive = match.status === 'IN_PLAY' || match.status === 'PAUSED';
-  const isFinished = match.status === 'FINISHED';
+  const isLive = match.fixture.status.short === '1H' || match.fixture.status.short === '2H' || match.fixture.status.short === 'HT';
+  const isFinished = match.fixture.status.short === 'FT';
+  const hasScore = match.goals.home !== null && match.goals.away !== null;
 
   return (
     <main className="container mx-auto px-4 py-6 space-y-6">
@@ -75,13 +80,13 @@ const MatchDetails = () => {
               className={isLive ? "bg-gradient-primary animate-pulse" : ""}
             >
               <Trophy className="w-3 h-3 mr-1" />
-              Serie A
+              {match.league.name} - {match.league.round}
             </Badge>
             <div className="flex items-center text-muted-foreground text-sm">
               <Clock className="w-4 h-4 mr-1" />
               {isFinished ? 'Finale' : 
-               isLive ? 'In Diretta' : 
-               new Date(match.utcDate).toLocaleString('it-IT')}
+               isLive ? `${match.fixture.status.elapsed}'` : 
+               new Date(match.fixture.date).toLocaleString('it-IT')}
             </div>
           </div>
 
@@ -91,22 +96,25 @@ const MatchDetails = () => {
             <div className="text-center">
               <div className="w-16 h-16 mx-auto mb-2 flex items-center justify-center bg-muted rounded-full">
                 <img 
-                  src={match.homeTeam.crest} 
-                  alt={match.homeTeam.name}
+                  src={match.teams.home.logo} 
+                  alt={match.teams.home.name}
                   className="w-12 h-12 object-contain"
                   onError={(e) => {
                     e.currentTarget.style.display = 'none';
                   }}
                 />
               </div>
-              <h3 className="font-medium text-sm">{match.homeTeam.name}</h3>
+              <h3 className="font-medium text-sm">{match.teams.home.name}</h3>
+              {match.teams.home.winner && (
+                <Badge variant="secondary" className="mt-1 text-xs">Vincitore</Badge>
+              )}
             </div>
 
             {/* Score */}
             <div className="text-center">
-              {(isFinished || isLive) && match.score.fullTime.home !== null ? (
+              {hasScore ? (
                 <div className="text-4xl font-bold text-primary">
-                  {match.score.fullTime.home} - {match.score.fullTime.away}
+                  {match.goals.home} - {match.goals.away}
                 </div>
               ) : (
                 <div className="text-2xl font-medium text-muted-foreground">
@@ -124,56 +132,57 @@ const MatchDetails = () => {
             <div className="text-center">
               <div className="w-16 h-16 mx-auto mb-2 flex items-center justify-center bg-muted rounded-full">
                 <img 
-                  src={match.awayTeam.crest} 
-                  alt={match.awayTeam.name}
+                  src={match.teams.away.logo} 
+                  alt={match.teams.away.name}
                   className="w-12 h-12 object-contain"
                   onError={(e) => {
                     e.currentTarget.style.display = 'none';
                   }}
                 />
               </div>
-              <h3 className="font-medium text-sm">{match.awayTeam.name}</h3>
+              <h3 className="font-medium text-sm">{match.teams.away.name}</h3>
+              {match.teams.away.winner && (
+                <Badge variant="secondary" className="mt-1 text-xs">Vincitore</Badge>
+              )}
             </div>
           </div>
         </div>
       </Card>
 
       {/* Dettagli risultato */}
-      {match.score && (match.score.fullTime.home !== null || isLive) && (
+      {hasScore && (
         <Card className="shadow-card p-6">
           <h3 className="font-semibold mb-4 flex items-center">
             <Target className="w-4 h-4 mr-2" />
             Risultato
           </h3>
           <div className="space-y-3">
-            {match.score.fullTime.home !== null && (
-              <div className="flex justify-between items-center">
-                <span className="text-muted-foreground">Tempo pieno:</span>
-                <span className="font-mono text-lg">
-                  {match.score.fullTime.home} - {match.score.fullTime.away}
-                </span>
-              </div>
-            )}
-            {match.score.halfTime?.home !== null && (
+            <div className="flex justify-between items-center">
+              <span className="text-muted-foreground">Tempo pieno:</span>
+              <span className="font-mono text-lg">
+                {match.score.fulltime.home} - {match.score.fulltime.away}
+              </span>
+            </div>
+            {match.score.halftime.home !== null && (
               <div className="flex justify-between items-center">
                 <span className="text-muted-foreground">Primo tempo:</span>
                 <span className="font-mono">
-                  {match.score.halfTime.home} - {match.score.halfTime.away}
+                  {match.score.halftime.home} - {match.score.halftime.away}
                 </span>
-              </div>
-            )}
-            {match.score.winner && (
-              <div className="flex justify-between items-center">
-                <span className="text-muted-foreground">Vincitore:</span>
-                <Badge variant="secondary">
-                  {match.score.winner === 'HOME_TEAM' ? match.homeTeam.name :
-                   match.score.winner === 'AWAY_TEAM' ? match.awayTeam.name : 'Pareggio'}
-                </Badge>
               </div>
             )}
           </div>
         </Card>
       )}
+
+      {/* Eventi della partita */}
+      <MatchEvents events={events} />
+
+      {/* Formazioni */}
+      <MatchLineups lineups={lineups} />
+
+      {/* Statistiche */}
+      <MatchStatistics statistics={statistics} />
 
       {/* Informazioni partita */}
       <Card className="shadow-card p-6">
@@ -184,43 +193,31 @@ const MatchDetails = () => {
         <div className="space-y-3 text-sm">
           <div className="flex justify-between">
             <span className="text-muted-foreground">Data e ora:</span>
-            <span>{new Date(match.utcDate).toLocaleString('it-IT')}</span>
+            <span>{new Date(match.fixture.date).toLocaleString('it-IT')}</span>
           </div>
           <div className="flex justify-between">
             <span className="text-muted-foreground">Status:</span>
             <Badge variant="outline">
-              {match.status === 'FINISHED' ? 'Finale' : 
-               match.status === 'TIMED' ? 'Programmata' :
-               match.status === 'IN_PLAY' ? 'In Diretta' : match.status}
+              {match.fixture.status.long}
             </Badge>
           </div>
-          <div className="flex justify-between">
-            <span className="text-muted-foreground">Giornata:</span>
-            <span>{match.matchday}ª</span>
-          </div>
-          {match.referees && match.referees.length > 0 && (
+          {match.fixture.venue.name && (
+            <div className="flex justify-between">
+              <span className="text-muted-foreground flex items-center">
+                <MapPin className="w-3 h-3 mr-1" />
+                Stadio:
+              </span>
+              <span>{match.fixture.venue.name}</span>
+            </div>
+          )}
+          {match.fixture.referee && (
             <div className="flex justify-between">
               <span className="text-muted-foreground">Arbitro:</span>
-              <span>{match.referees[0].name}</span>
+              <span>{match.fixture.referee}</span>
             </div>
           )}
         </div>
       </Card>
-
-      {/* Nota sui dettagli aggiuntivi - mostrata solo se la partita non ha molti dati */}
-      {(!match.referees || match.referees.length === 0) && (
-        <Card className="shadow-card p-6 bg-muted/30">
-          <h3 className="font-semibold mb-4 flex items-center">
-            <Target className="w-4 h-4 mr-2" />
-            Informazioni complete
-          </h3>
-          <p className="text-muted-foreground text-sm">
-            Questa partita mostra i dati disponibili dalla Football-Data API. 
-            Alcune informazioni dettagliate come eventi in tempo reale, formazioni e 
-            statistiche avanzate potrebbero non essere disponibili per tutte le partite.
-          </p>
-        </Card>
-      )}
     </main>
   );
 };
