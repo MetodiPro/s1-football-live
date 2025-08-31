@@ -36,7 +36,7 @@ export const useSerieAStandings = () => {
   const [error, setError] = useState<string | null>(null);
 
   // Serie A league ID is 135 in API-Football
-  const { data, loading: apiLoading, error: apiError } = useApiFootball('standings?league=135&season=2024');
+  const { data, loading: apiLoading, error: apiError } = useApiFootball('standings?league=135&season=2023');
 
   useEffect(() => {
     if (data && data.response && data.response[0]) {
@@ -61,8 +61,8 @@ export const useSerieAStandings = () => {
       
       setStandings(transformedStandings);
       setSeason({
-        startDate: '2024-08-01',
-        endDate: '2025-05-31',
+        startDate: '2023-08-01',
+        endDate: '2024-05-31',
         currentMatchday: 1
       });
       setError(null);

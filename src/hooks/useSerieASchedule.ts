@@ -32,7 +32,7 @@ export const useSerieASchedule = () => {
   const [error, setError] = useState<string | null>(null);
 
   // Get Serie A matches - Serie A league ID is 135 in API-Football
-  const { data, loading: apiLoading, error: apiError } = useApiFootball('fixtures?league=135&season=2024');
+  const { data, loading: apiLoading, error: apiError } = useApiFootball('fixtures?league=135&season=2023');
 
   useEffect(() => {
     if (data && data.response) {
