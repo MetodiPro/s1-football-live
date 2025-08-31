@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { supabase } from '@/integrations/supabase/client';
+import { useFootballDataOrg } from '@/hooks/useFootballDataOrg';
 
 export interface Player {
   id: string;
@@ -136,265 +136,117 @@ export const useMatchDetails = (matchId: string) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchMatchDetails = async () => {
-    if (!matchId) {
-      setError('ID partita mancante');
-      setLoading(false);
-      return;
-    }
+  // Fetch match details from Football-Data.org
+  const { data, loading: apiLoading, error: apiError } = useFootballDataOrg(`matches/${matchId}`);
 
-    try {
-      setLoading(true);
-      setError(null);
+  useEffect(() => {
+    if (data) {
+      console.log('Match details from Football-Data.org:', data);
 
-      console.log(`Fetching match details for ID: ${matchId} from TheSportsDB`);
-
-      // Fetch basic match details
-      const { data: matchData, error: matchError } = await supabase.functions.invoke('thesportsdb', {
-        body: { endpoint: `lookupevent.php?id=${matchId}` }
-      });
-
-      if (matchError) {
-        console.error('Match fetch error:', matchError);
-        throw new Error(matchError.message);
-      }
-
-      if (matchData.error) {
-        throw new Error(matchData.error);
-      }
-
-      if (!matchData.events || matchData.events.length === 0) {
-        throw new Error('Partita non trovata');
-      }
-
-      const event = matchData.events[0];
-      console.log('Match details from TheSportsDB:', event);
-
-      // Transform TheSportsDB event to our format
+      // Transform Football-Data.org match to our format
       const transformedMatch: MatchDetails = {
         fixture: {
-          id: event.idEvent,
-          referee: event.strOfficial,
+          id: data.id.toString(),
+          referee: data.referees?.[0]?.name,
           timezone: 'Europe/Rome',
-          date: event.strTimestamp || event.dateEvent + 'T' + (event.strTime || '00:00:00'),
-          timestamp: new Date(event.strTimestamp || event.dateEvent).getTime() / 1000,
+          date: data.utcDate,
+          timestamp: new Date(data.utcDate).getTime() / 1000,
           periods: {
-            first: null,
-            second: null,
+            first: data.score.halfTime.home !== null ? 45 : undefined,
+            second: data.score.fullTime.home !== null ? 90 : undefined,
           },
           venue: {
-            id: event.idVenue,
-            name: event.strVenue,
-            city: event.strCity,
+            id: data.venue?.id?.toString(),
+            name: data.venue?.name,
+            city: data.venue?.city,
           },
           status: {
-            long: getStatusLong(event.strStatus || 'Not Started'),
-            short: getStatusShort(event.strStatus || 'Not Started'),
-            elapsed: event.intSpectators ? undefined : undefined,
+            long: getStatusLong(data.status),
+            short: getStatusShort(data.status),
+            elapsed: data.minute || undefined,
           },
         },
         league: {
-          id: event.idLeague || '4332',
-          name: event.strLeague || 'Serie A',
+          id: data.competition.id.toString(),
+          name: data.competition.name,
           country: 'Italy',
-          logo: event.strLeagueBadge || '',
-          flag: 'https://www.thesportsdb.com/images/media/league/badge/64049016687289.png',
-          season: 2024,
-          round: `Round ${event.intRound || 'Unknown'}`,
+          logo: data.competition.emblem || '',
+          flag: 'https://flagsapi.com/it/flat/64.png',
+          season: data.season.startDate ? new Date(data.season.startDate).getFullYear() : 2024,
+          round: `Matchday ${data.matchday}`,
         },
         teams: {
           home: {
-            id: event.idHomeTeam,
-            name: event.strHomeTeam,
-            logo: event.strHomeTeamBadge || '',
-            winner: event.intHomeScore && event.intAwayScore ? 
-              parseInt(event.intHomeScore) > parseInt(event.intAwayScore) : undefined,
+            id: data.homeTeam.id.toString(),
+            name: data.homeTeam.name,
+            logo: data.homeTeam.crest || '',
+            winner: data.score.winner === 'HOME_TEAM',
           },
           away: {
-            id: event.idAwayTeam,
-            name: event.strAwayTeam,
-            logo: event.strAwayTeamBadge || '',
-            winner: event.intHomeScore && event.intAwayScore ? 
-              parseInt(event.intAwayScore) > parseInt(event.intHomeScore) : undefined,
+            id: data.awayTeam.id.toString(),
+            name: data.awayTeam.name,
+            logo: data.awayTeam.crest || '',
+            winner: data.score.winner === 'AWAY_TEAM',
           },
         },
         goals: {
-          home: event.intHomeScore ? parseInt(event.intHomeScore) : undefined,
-          away: event.intAwayScore ? parseInt(event.intAwayScore) : undefined,
+          home: data.score.fullTime.home,
+          away: data.score.fullTime.away,
         },
         score: {
           halftime: {
-            home: event.intHomeScore ? parseInt(event.intHomeScore) : undefined,
-            away: event.intAwayScore ? parseInt(event.intAwayScore) : undefined,
+            home: data.score.halfTime.home,
+            away: data.score.halfTime.away,
           },
           fulltime: {
-            home: event.intHomeScore ? parseInt(event.intHomeScore) : undefined,
-            away: event.intAwayScore ? parseInt(event.intAwayScore) : undefined,
+            home: data.score.fullTime.home,
+            away: data.score.fullTime.away,
           },
           extratime: {
-            home: undefined,
-            away: undefined,
+            home: data.score.extraTime?.home,
+            away: data.score.extraTime?.away,
           },
           penalty: {
-            home: undefined,
-            away: undefined,
+            home: data.score.penalties?.home,
+            away: data.score.penalties?.away,
           },
         },
       };
 
       setMatchDetails(transformedMatch);
-
-      // Fetch additional data if match is finished or live
-      const status = event.strStatus;
-      if (status === 'Match Finished' || status === 'FT') {
-        try {
-          // Fetch events timeline
-          const { data: eventsData } = await supabase.functions.invoke('thesportsdb', {
-            body: { endpoint: `lookupeventtimeline.php?id=${matchId}` }
-          });
-          
-          if (eventsData.timeline) {
-            const transformedEvents = eventsData.timeline.map((timeline: any) => ({
-              time: {
-                elapsed: parseInt(timeline.intTime) || 0,
-              },
-              team: {
-                id: timeline.idTeam,
-                name: timeline.strTeamBadge?.includes('Home') ? event.strHomeTeam : event.strAwayTeam,
-                logo: timeline.idTeam === event.idHomeTeam ? event.strHomeTeamBadge : event.strAwayTeamBadge,
-              },
-              player: {
-                id: timeline.idPlayer || '',
-                name: timeline.strPlayer || '',
-              },
-              assist: timeline.strAssist ? {
-                id: '',
-                name: timeline.strAssist,
-              } : undefined,
-              type: timeline.strEvent || 'Unknown',
-              detail: timeline.strEvent || '',
-              comments: timeline.strComment,
-            }));
-            setEvents(transformedEvents);
-          }
-        } catch (err) {
-          console.log('Events timeline not available:', err);
-        }
-
-        try {
-          // Try to fetch lineup if available
-          const { data: lineupData } = await supabase.functions.invoke('thesportsdb', {
-            body: { endpoint: `lookuplineup.php?id=${matchId}` }
-          });
-          
-          if (lineupData.lineup) {
-            const homeLineup = lineupData.lineup.filter((player: any) => 
-              player.strTeam === event.strHomeTeam
-            );
-            const awayLineup = lineupData.lineup.filter((player: any) => 
-              player.strTeam === event.strAwayTeam
-            );
-
-            const transformedLineups = [
-              {
-                team: {
-                  id: event.idHomeTeam,
-                  name: event.strHomeTeam,
-                  logo: event.strHomeTeamBadge || '',
-                },
-                formation: homeLineup[0]?.strFormation || '4-4-2',
-                startXI: homeLineup.filter((p: any) => p.strPosition !== 'Substitute').map((player: any) => ({
-                  player: {
-                    id: player.idPlayer,
-                    name: player.strPlayer,
-                    pos: player.strPosition,
-                    number: parseInt(player.intSquadNumber) || undefined,
-                  },
-                })),
-                substitutes: homeLineup.filter((p: any) => p.strPosition === 'Substitute').map((player: any) => ({
-                  player: {
-                    id: player.idPlayer,
-                    name: player.strPlayer,
-                    pos: player.strPosition,
-                    number: parseInt(player.intSquadNumber) || undefined,
-                  },
-                })),
-              },
-              {
-                team: {
-                  id: event.idAwayTeam,
-                  name: event.strAwayTeam,
-                  logo: event.strAwayTeamBadge || '',
-                },
-                formation: awayLineup[0]?.strFormation || '4-4-2',
-                startXI: awayLineup.filter((p: any) => p.strPosition !== 'Substitute').map((player: any) => ({
-                  player: {
-                    id: player.idPlayer,
-                    name: player.strPlayer,
-                    pos: player.strPosition,
-                    number: parseInt(player.intSquadNumber) || undefined,
-                  },
-                })),
-                substitutes: awayLineup.filter((p: any) => p.strPosition === 'Substitute').map((player: any) => ({
-                  player: {
-                    id: player.idPlayer,
-                    name: player.strPlayer,
-                    pos: player.strPosition,
-                    number: parseInt(player.intSquadNumber) || undefined,
-                  },
-                })),
-              },
-            ];
-            setLineups(transformedLineups);
-          }
-        } catch (err) {
-          console.log('Lineups not available:', err);
-        }
-      }
-
-    } catch (err) {
-      console.error('Error fetching match details from TheSportsDB:', err);
-      setError(err instanceof Error ? err.message : 'Impossibile recuperare i dettagli della partita');
-    } finally {
-      setLoading(false);
+      setError(null);
+    } else if (apiError) {
+      setError(apiError);
     }
-  };
+    
+    setLoading(apiLoading);
+  }, [data, apiLoading, apiError]);
 
   const getStatusLong = (status: string): string => {
     const statusMap: { [key: string]: string } = {
-      'Match Finished': 'Match Finished',
-      'Not Started': 'Not Started',
-      'In Play': 'In Play',
-      'Half Time': 'Half Time',
-      'Full Time': 'Match Finished',
-      'NS': 'Not Started',
-      'FT': 'Match Finished',
-      'HT': 'Half Time',
-      '1H': 'First Half',
-      '2H': 'Second Half'
+      'FINISHED': 'Match Finished',
+      'SCHEDULED': 'Not Started',
+      'IN_PLAY': 'In Play',
+      'PAUSED': 'Half Time',
+      'POSTPONED': 'Postponed',
+      'CANCELLED': 'Cancelled',
+      'SUSPENDED': 'Suspended'
     };
     return statusMap[status] || status;
   };
 
   const getStatusShort = (status: string): string => {
     const statusMap: { [key: string]: string } = {
-      'Match Finished': 'FT',
-      'Not Started': 'NS',
-      'In Play': 'LIVE',
-      'Half Time': 'HT',
-      'Full Time': 'FT',
-      'NS': 'NS',
-      'FT': 'FT',
-      'HT': 'HT',
-      '1H': '1H',
-      '2H': '2H'
+      'FINISHED': 'FT',
+      'SCHEDULED': 'NS',
+      'IN_PLAY': 'LIVE',
+      'PAUSED': 'HT',
+      'POSTPONED': 'PP',
+      'CANCELLED': 'CANC',
+      'SUSPENDED': 'SUSP'
     };
     return statusMap[status] || 'NS';
   };
-
-  useEffect(() => {
-    fetchMatchDetails();
-  }, [matchId]);
 
   return {
     matchDetails,
@@ -403,6 +255,8 @@ export const useMatchDetails = (matchId: string) => {
     statistics,
     loading,
     error,
-    refetch: fetchMatchDetails
+    refetch: () => {
+      // The hook will automatically refetch when dependencies change
+    }
   };
 };

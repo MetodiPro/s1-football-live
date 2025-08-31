@@ -13,9 +13,9 @@ serve(async (req) => {
   try {
     const { endpoint } = await req.json();
     
-    console.log(`Making request to TheSportsDB: ${endpoint}`);
+    console.log(`Making request to Football-Data.org: ${endpoint}`);
 
-    const response = await fetch(`https://www.thesportsdb.com/api/v1/json/3/${endpoint}`, {
+    const response = await fetch(`https://api.football-data.org/v4/${endpoint}`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
@@ -24,22 +24,22 @@ serve(async (req) => {
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error('TheSportsDB error response:', errorText);
-      throw new Error(`TheSportsDB error: ${response.status} - ${errorText}`);
+      console.error('Football-Data.org error response:', errorText);
+      throw new Error(`Football-Data.org error: ${response.status} - ${errorText}`);
     }
 
     const data = await response.json();
-    console.log('TheSportsDB response received successfully');
+    console.log('Football-Data.org response received successfully');
     
     return new Response(JSON.stringify(data), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
 
   } catch (error) {
-    console.error('Error in thesportsdb function:', error);
+    console.error('Error in football-data-org function:', error);
     return new Response(JSON.stringify({ 
       error: error.message,
-      details: 'Errore nel recupero dati da TheSportsDB'
+      details: 'Errore nel recupero dati da Football-Data.org'
     }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },

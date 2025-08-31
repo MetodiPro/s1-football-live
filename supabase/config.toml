@@ -1,4 +1,4 @@
 project_id = "urebctifhcxphqbhwrjr"
 
-[functions.thesportsdb]
+[functions.football-data-org]
 verify_jwt = false

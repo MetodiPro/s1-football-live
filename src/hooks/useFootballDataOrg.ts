@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 
-export const useTheSportsDB = (endpoint: string) => {
+export const useFootballDataOrg = (endpoint: string) => {
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -17,9 +17,9 @@ export const useTheSportsDB = (endpoint: string) => {
       setLoading(true);
       setError(null);
 
-      console.log(`Fetching from TheSportsDB: ${endpoint}`);
+      console.log(`Fetching from Football-Data.org: ${endpoint}`);
       
-      const { data: responseData, error: functionError } = await supabase.functions.invoke('thesportsdb', {
+      const { data: responseData, error: functionError } = await supabase.functions.invoke('football-data-org', {
         body: { endpoint }
       });
 
@@ -31,10 +31,10 @@ export const useTheSportsDB = (endpoint: string) => {
         throw new Error(responseData.error);
       }
 
-      console.log('TheSportsDB response:', responseData);
+      console.log('Football-Data.org response:', responseData);
       setData(responseData);
     } catch (err) {
-      console.error('Error fetching from TheSportsDB:', err);
+      console.error('Error fetching from Football-Data.org:', err);
       setError(err instanceof Error ? err.message : 'Errore nel recupero dati');
     } finally {
       setLoading(false);

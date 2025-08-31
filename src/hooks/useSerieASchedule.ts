@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { supabase } from '@/integrations/supabase/client';
+import { useFootballDataOrg } from '@/hooks/useFootballDataOrg';
 
 export interface ScheduleMatch {
   id: string;
@@ -31,105 +31,51 @@ export const useSerieASchedule = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchSchedule = async (round?: number) => {
-    try {
-      setLoading(true);
-      setError(null);
+  // Get Serie A matches - Serie A competition ID is SA in Football-Data.org
+  const { data, loading: apiLoading, error: apiError } = useFootballDataOrg('competitions/SA/matches');
 
-      // Serie A ID in TheSportsDB is 4332
-      const leagueId = '4332';
-      const currentSeason = '2024-2025';
-      
-      // Get current round if not specified
-      const roundNumber = round || getCurrentRound();
-      
-      const endpoint = `eventsround.php?id=${leagueId}&r=${roundNumber}&s=${currentSeason}`;
-      
-      console.log(`Fetching Serie A schedule: ${endpoint}`);
-      
-      const { data, error: functionError } = await supabase.functions.invoke('thesportsdb', {
-        body: { endpoint }
-      });
-
-      if (functionError) {
-        throw new Error(functionError.message);
-      }
-
-      if (data.error) {
-        throw new Error(data.error);
-      }
-
-      console.log('Serie A Schedule Response:', data);
-
-      // Transform TheSportsDB events to our format
-      const transformedMatches = (data.events || []).map((event: any) => ({
-        id: event.idEvent,
-        utcDate: event.strTimestamp || event.dateEvent + 'T' + (event.strTime || '00:00:00'),
-        status: transformMatchStatus(event.strStatus || 'NS'),
-        matchday: parseInt(event.intRound) || roundNumber,
+  useEffect(() => {
+    if (data && data.matches) {
+      const transformedMatches = data.matches.map((match: any) => ({
+        id: match.id.toString(),
+        utcDate: match.utcDate,
+        status: match.status,
+        matchday: match.matchday,
         homeTeam: {
-          id: event.idHomeTeam,
-          name: event.strHomeTeam,
-          crest: event.strHomeTeamBadge,
-          shortName: event.strHomeTeam
+          id: match.homeTeam.id.toString(),
+          name: match.homeTeam.name,
+          crest: match.homeTeam.crest,
+          shortName: match.homeTeam.shortName,
         },
         awayTeam: {
-          id: event.idAwayTeam,
-          name: event.strAwayTeam,
-          crest: event.strAwayTeamBadge,
-          shortName: event.strAwayTeam
+          id: match.awayTeam.id.toString(),
+          name: match.awayTeam.name,
+          crest: match.awayTeam.crest,
+          shortName: match.awayTeam.shortName,
         },
         score: {
           fullTime: {
-            home: event.intHomeScore ? parseInt(event.intHomeScore) : null,
-            away: event.intAwayScore ? parseInt(event.intAwayScore) : null
-          }
-        }
+            home: match.score.fullTime.home,
+            away: match.score.fullTime.away,
+          },
+        },
       }));
-
+      
       setMatches(transformedMatches);
-
-    } catch (err) {
-      console.error('Error fetching Serie A schedule:', err);
-      setError(err instanceof Error ? err.message : 'Impossibile recuperare il calendario della Serie A');
-    } finally {
-      setLoading(false);
+      setError(null);
+    } else if (apiError) {
+      setError(apiError);
     }
-  };
-
-  // Get current round based on date
-  const getCurrentRound = () => {
-    const now = new Date();
-    const seasonStart = new Date('2024-08-15');
-    const weeksPassed = Math.floor((now.getTime() - seasonStart.getTime()) / (1000 * 60 * 60 * 24 * 7));
-    return Math.max(1, Math.min(38, weeksPassed + 1));
-  };
-
-  // Transform TheSportsDB status to our format
-  const transformMatchStatus = (status: string): string => {
-    const statusMap: { [key: string]: string } = {
-      'Match Finished': 'FINISHED',
-      'Not Started': 'SCHEDULED',
-      'In Play': 'IN_PLAY',
-      'Half Time': 'PAUSED',
-      'Full Time': 'FINISHED',
-      'NS': 'SCHEDULED',
-      'FT': 'FINISHED',
-      'HT': 'PAUSED',
-      '1H': 'IN_PLAY',
-      '2H': 'IN_PLAY'
-    };
-    return statusMap[status] || 'SCHEDULED';
-  };
-
-  useEffect(() => {
-    fetchSchedule();
-  }, []);
+    
+    setLoading(apiLoading);
+  }, [data, apiLoading, apiError]);
 
   return {
     matches,
     loading,
     error,
-    refetch: fetchSchedule
+    refetch: () => {
+      // The hook will automatically refetch when dependencies change
+    }
   };
 };
