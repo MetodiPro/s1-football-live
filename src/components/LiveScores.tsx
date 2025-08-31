@@ -86,7 +86,36 @@ export function LiveScores() {
     );
   }
 
-  const convertedMatches = matches.map(convertMatch);
+  // Determine current or last completed matchday
+  const getCurrentMatchday = (): number => {
+    if (matches.length === 0) return 1;
+    
+    // First, check if there are live matches
+    const liveMatches = matches.filter(match => 
+      match.status === 'IN_PLAY' || match.status === 'PAUSED'
+    );
+    
+    if (liveMatches.length > 0) {
+      // Return the matchday of live matches
+      return Math.max(...liveMatches.map(match => match.matchday));
+    }
+    
+    // If no live matches, find the most recent completed matchday
+    const finishedMatches = matches.filter(match => match.status === 'FINISHED');
+    
+    if (finishedMatches.length > 0) {
+      return Math.max(...finishedMatches.map(match => match.matchday));
+    }
+    
+    // If no finished matches, get the most recent matchday
+    return Math.max(...matches.map(match => match.matchday));
+  };
+
+  const currentMatchday = getCurrentMatchday();
+  
+  // Filter matches for current matchday only
+  const currentMatchdayMatches = matches.filter(match => match.matchday === currentMatchday);
+  const convertedMatches = currentMatchdayMatches.map(convertMatch);
   
   // Separate live and other matches
   const liveMatches = convertedMatches.filter(match => match.status === 'live');
@@ -112,9 +141,14 @@ export function LiveScores() {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h2 className="text-lg font-bold text-foreground">
-          Serie A - Partite
-        </h2>
+        <div>
+          <h2 className="text-lg font-bold text-foreground">
+            Serie A - Giornata {currentMatchday}
+          </h2>
+          <p className="text-sm text-muted-foreground">
+            {liveMatches.length > 0 ? 'In corso' : 'Completata'}
+          </p>
+        </div>
         <Button variant="ghost" size="sm" onClick={handleRefresh} className="p-2">
           <RefreshCw className="w-4 h-4" />
         </Button>
