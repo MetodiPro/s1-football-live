@@ -15,11 +15,18 @@ serve(async (req) => {
     
     console.log(`Making request to API-Football: ${endpoint}`);
 
+    // Get API key from Supabase secrets
+    const apiKey = Deno.env.get('API_FOOTBALL_KEY');
+    
+    if (!apiKey) {
+      throw new Error('API-Football key not configured in secrets');
+    }
+
     const response = await fetch(`https://v3.football.api-sports.io/${endpoint}`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
-        'x-apisports-key': '9cfaa42b3b0af2f9487a1623c84f5aa4',
+        'x-apisports-key': apiKey,
       },
     });
 
