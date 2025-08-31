@@ -19,8 +19,11 @@ serve(async (req) => {
     const apiKey = Deno.env.get('API_FOOTBALL_KEY');
     
     if (!apiKey) {
+      console.error('API_FOOTBALL_KEY secret not found');
       throw new Error('API-Football key not configured in secrets');
     }
+    
+    console.log('API key loaded successfully');
 
     const response = await fetch(`https://v3.football.api-sports.io/${endpoint}`, {
       method: 'GET',
