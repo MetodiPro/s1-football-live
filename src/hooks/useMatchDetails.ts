@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useFootballDataOrg } from '@/hooks/useFootballDataOrg';
+import { useApiFootball } from '@/hooks/useApiFootball';
 
 export interface Player {
   id: string;
@@ -136,86 +136,87 @@ export const useMatchDetails = (matchId: string) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Fetch match details from Football-Data.org
-  const { data: matchData, loading: matchLoading, error: matchError } = useFootballDataOrg(`matches/${matchId}`);
+  // Fetch match details from API-Football
+  const { data: matchData, loading: matchLoading, error: matchError } = useApiFootball(matchId ? `fixtures?id=${matchId}` : '');
 
   useEffect(() => {
-    if (matchData) {
-      console.log('Match details from Football-Data.org:', matchData);
-      // Transform Football-Data.org match to our format
+    if (matchData && matchData.response && matchData.response[0]) {
+      const match = matchData.response[0];
+      console.log('Match details from API-Football:', match);
+      
+      // Transform API-Football match to our format
       const transformedMatch: MatchDetails = {
         fixture: {
-          id: matchData.id.toString(),
-          referee: matchData.referees?.[0]?.name,
-          timezone: 'Europe/Rome',
-          date: matchData.utcDate,
-          timestamp: new Date(matchData.utcDate).getTime() / 1000,
+          id: match.fixture.id.toString(),
+          referee: match.fixture.referee,
+          timezone: match.fixture.timezone || 'Europe/Rome',
+          date: match.fixture.date,
+          timestamp: match.fixture.timestamp,
           periods: {
-            first: matchData.score.halfTime.home !== null ? 45 : undefined,
-            second: matchData.score.fullTime.home !== null ? 90 : undefined,
+            first: match.fixture.periods?.first,
+            second: match.fixture.periods?.second,
           },
           venue: {
-            id: matchData.venue?.id?.toString(),
-            name: matchData.venue?.name,
-            city: matchData.venue?.city,
+            id: match.fixture.venue?.id?.toString(),
+            name: match.fixture.venue?.name,
+            city: match.fixture.venue?.city,
           },
           status: {
-            long: getStatusLong(matchData.status),
-            short: getStatusShort(matchData.status),
-            elapsed: matchData.minute || undefined,
+            long: getStatusLong(match.fixture.status.short),
+            short: getStatusShort(match.fixture.status.short),
+            elapsed: match.fixture.status.elapsed,
           },
         },
         league: {
-          id: matchData.competition.id.toString(),
-          name: matchData.competition.name,
-          country: 'Italy',
-          logo: matchData.competition.emblem || '',
-          flag: 'https://flagsapi.com/it/flat/64.png',
-          season: matchData.season.startDate ? new Date(matchData.season.startDate).getFullYear() : 2024,
-          round: `Matchday ${matchData.matchday}`,
+          id: match.league.id.toString(),
+          name: match.league.name,
+          country: match.league.country,
+          logo: match.league.logo || '',
+          flag: match.league.flag || 'https://flagsapi.com/it/flat/64.png',
+          season: match.league.season,
+          round: match.league.round,
         },
         teams: {
           home: {
-            id: matchData.homeTeam.id.toString(),
-            name: matchData.homeTeam.name,
-            logo: matchData.homeTeam.crest || '',
-            winner: matchData.score.winner === 'HOME_TEAM',
+            id: match.teams.home.id.toString(),
+            name: match.teams.home.name,
+            logo: match.teams.home.logo || '',
+            winner: match.teams.home.winner,
           },
           away: {
-            id: matchData.awayTeam.id.toString(),
-            name: matchData.awayTeam.name,
-            logo: matchData.awayTeam.crest || '',
-            winner: matchData.score.winner === 'AWAY_TEAM',
+            id: match.teams.away.id.toString(),
+            name: match.teams.away.name,
+            logo: match.teams.away.logo || '',
+            winner: match.teams.away.winner,
           },
         },
         goals: {
-          home: matchData.score.fullTime.home,
-          away: matchData.score.fullTime.away,
+          home: match.goals.home,
+          away: match.goals.away,
         },
         score: {
           halftime: {
-            home: matchData.score.halfTime.home,
-            away: matchData.score.halfTime.away,
+            home: match.score.halftime.home,
+            away: match.score.halftime.away,
           },
           fulltime: {
-            home: matchData.score.fullTime.home,
-            away: matchData.score.fullTime.away,
+            home: match.score.fulltime.home,
+            away: match.score.fulltime.away,
           },
           extratime: {
-            home: matchData.score.extraTime?.home,
-            away: matchData.score.extraTime?.away,
+            home: match.score.extratime.home,
+            away: match.score.extratime.away,
           },
           penalty: {
-            home: matchData.score.penalties?.home,
-            away: matchData.score.penalties?.away,
+            home: match.score.penalty.home,
+            away: match.score.penalty.away,
           },
         },
       };
 
       setMatchDetails(transformedMatch);
 
-      // Football-Data.org free tier doesn't provide match events/lineups/statistics
-      // These remain empty arrays
+      // API-Football provides additional data but might require higher subscription
       setEvents([]);
       setLineups([]);
       setStatistics([]);
@@ -230,26 +231,40 @@ export const useMatchDetails = (matchId: string) => {
 
   const getStatusLong = (status: string): string => {
     const statusMap: { [key: string]: string } = {
-      'FINISHED': 'Match Finished',
-      'SCHEDULED': 'Not Started',
-      'IN_PLAY': 'In Play',
-      'PAUSED': 'Half Time',
-      'POSTPONED': 'Postponed',
-      'CANCELLED': 'Cancelled',
-      'SUSPENDED': 'Suspended'
+      'FT': 'Match Finished',
+      'NS': 'Not Started',
+      '1H': 'First Half',
+      '2H': 'Second Half',
+      'HT': 'Half Time',
+      'ET': 'Extra Time',
+      'P': 'Penalty In Progress',
+      'PEN': 'Match Finished After Penalties',
+      'PST': 'Postponed',
+      'CANC': 'Cancelled',
+      'SUSP': 'Suspended',
+      'AWD': 'Technical Loss',
+      'WO': 'WalkOver',
+      'LIVE': 'In Play'
     };
     return statusMap[status] || status;
   };
 
   const getStatusShort = (status: string): string => {
     const statusMap: { [key: string]: string } = {
-      'FINISHED': 'FT',
-      'SCHEDULED': 'NS',
-      'IN_PLAY': 'LIVE',
-      'PAUSED': 'HT',
-      'POSTPONED': 'PP',
-      'CANCELLED': 'CANC',
-      'SUSPENDED': 'SUSP'
+      'FT': 'FT',
+      'NS': 'NS',
+      '1H': 'LIVE',
+      '2H': 'LIVE',
+      'HT': 'HT',
+      'ET': 'LIVE',
+      'P': 'LIVE',
+      'PEN': 'FT',
+      'PST': 'PP',
+      'CANC': 'CANC',
+      'SUSP': 'SUSP',
+      'AWD': 'AWD',
+      'WO': 'WO',
+      'LIVE': 'LIVE'
     };
     return statusMap[status] || 'NS';
   };

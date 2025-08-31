@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useFootballDataOrg } from '@/hooks/useFootballDataOrg';
+import { useApiFootball } from '@/hooks/useApiFootball';
 
 export interface ScheduleMatch {
   id: string;
@@ -31,32 +31,32 @@ export const useSerieASchedule = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Get Serie A matches - Serie A competition ID is SA in Football-Data.org
-  const { data, loading: apiLoading, error: apiError } = useFootballDataOrg('competitions/SA/matches');
+  // Get Serie A matches - Serie A league ID is 135 in API-Football
+  const { data, loading: apiLoading, error: apiError } = useApiFootball('fixtures?league=135&season=2024');
 
   useEffect(() => {
-    if (data && data.matches) {
-      const transformedMatches = data.matches.map((match: any) => ({
-        id: match.id.toString(),
-        utcDate: match.utcDate,
-        status: match.status,
-        matchday: match.matchday,
+    if (data && data.response) {
+      const transformedMatches = data.response.map((match: any) => ({
+        id: match.fixture.id.toString(),
+        utcDate: match.fixture.date,
+        status: match.fixture.status.short,
+        matchday: match.league.round.replace('Regular Season - ', ''),
         homeTeam: {
-          id: match.homeTeam.id.toString(),
-          name: match.homeTeam.name,
-          crest: match.homeTeam.crest,
-          shortName: match.homeTeam.shortName,
+          id: match.teams.home.id.toString(),
+          name: match.teams.home.name,
+          crest: match.teams.home.logo,
+          shortName: match.teams.home.name.split(' ')[0],
         },
         awayTeam: {
-          id: match.awayTeam.id.toString(),
-          name: match.awayTeam.name,
-          crest: match.awayTeam.crest,
-          shortName: match.awayTeam.shortName,
+          id: match.teams.away.id.toString(),
+          name: match.teams.away.name,
+          crest: match.teams.away.logo,
+          shortName: match.teams.away.name.split(' ')[0],
         },
         score: {
           fullTime: {
-            home: match.score.fullTime.home,
-            away: match.score.fullTime.away,
+            home: match.goals.home,
+            away: match.goals.away,
           },
         },
       }));

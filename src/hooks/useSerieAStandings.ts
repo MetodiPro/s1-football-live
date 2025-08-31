@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useFootballDataOrg } from '@/hooks/useFootballDataOrg';
+import { useApiFootball } from '@/hooks/useApiFootball';
 
 export interface TeamStanding {
   position: number;
@@ -35,35 +35,35 @@ export const useSerieAStandings = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Serie A competition ID in Football-Data.org
-  const { data, loading: apiLoading, error: apiError } = useFootballDataOrg('competitions/SA/standings');
+  // Serie A league ID is 135 in API-Football
+  const { data, loading: apiLoading, error: apiError } = useApiFootball('standings?league=135&season=2024');
 
   useEffect(() => {
-    if (data && data.standings && data.standings[0]) {
-      const transformedStandings = data.standings[0].table.map((team: any) => ({
-        position: team.position,
+    if (data && data.response && data.response[0]) {
+      const transformedStandings = data.response[0].league.standings[0].map((team: any) => ({
+        position: team.rank,
         team: {
           id: team.team.id.toString(),
           name: team.team.name,
-          crest: team.team.crest,
-          shortName: team.team.shortName,
+          crest: team.team.logo,
+          shortName: team.team.name.split(' ')[0],
         },
-        playedGames: team.playedGames,
+        playedGames: team.all.played,
         form: team.form,
-        won: team.won,
-        draw: team.draw,
-        lost: team.lost,
+        won: team.all.win,
+        draw: team.all.draw,
+        lost: team.all.lose,
         points: team.points,
-        goalsFor: team.goalsFor,
-        goalsAgainst: team.goalsAgainst,
-        goalDifference: team.goalDifference,
+        goalsFor: team.all.goals.for,
+        goalsAgainst: team.all.goals.against,
+        goalDifference: team.goalsDiff,
       }));
       
       setStandings(transformedStandings);
       setSeason({
-        startDate: data.season.startDate,
-        endDate: data.season.endDate,
-        currentMatchday: data.season.currentMatchday
+        startDate: '2024-08-01',
+        endDate: '2025-05-31',
+        currentMatchday: 1
       });
       setError(null);
     } else if (apiError) {
