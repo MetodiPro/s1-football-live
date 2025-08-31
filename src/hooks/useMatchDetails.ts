@@ -137,90 +137,135 @@ export const useMatchDetails = (matchId: string) => {
   const [error, setError] = useState<string | null>(null);
 
   // Fetch match details from Football-Data.org
-  const { data, loading: apiLoading, error: apiError } = useFootballDataOrg(`matches/${matchId}`);
+  const { data: matchData, loading: matchLoading, error: matchError } = useFootballDataOrg(`matches/${matchId}`);
 
+  // Since Football-Data.org free tier doesn't provide detailed events, we'll create mock events for testing
   useEffect(() => {
-    if (data) {
-      console.log('Match details from Football-Data.org:', data);
+    if (matchData) {
+      console.log('Match details from Football-Data.org:', matchData);
 
       // Transform Football-Data.org match to our format
       const transformedMatch: MatchDetails = {
         fixture: {
-          id: data.id.toString(),
-          referee: data.referees?.[0]?.name,
+          id: matchData.id.toString(),
+          referee: matchData.referees?.[0]?.name,
           timezone: 'Europe/Rome',
-          date: data.utcDate,
-          timestamp: new Date(data.utcDate).getTime() / 1000,
+          date: matchData.utcDate,
+          timestamp: new Date(matchData.utcDate).getTime() / 1000,
           periods: {
-            first: data.score.halfTime.home !== null ? 45 : undefined,
-            second: data.score.fullTime.home !== null ? 90 : undefined,
+            first: matchData.score.halfTime.home !== null ? 45 : undefined,
+            second: matchData.score.fullTime.home !== null ? 90 : undefined,
           },
           venue: {
-            id: data.venue?.id?.toString(),
-            name: data.venue?.name,
-            city: data.venue?.city,
+            id: matchData.venue?.id?.toString(),
+            name: matchData.venue?.name,
+            city: matchData.venue?.city,
           },
           status: {
-            long: getStatusLong(data.status),
-            short: getStatusShort(data.status),
-            elapsed: data.minute || undefined,
+            long: getStatusLong(matchData.status),
+            short: getStatusShort(matchData.status),
+            elapsed: matchData.minute || undefined,
           },
         },
         league: {
-          id: data.competition.id.toString(),
-          name: data.competition.name,
+          id: matchData.competition.id.toString(),
+          name: matchData.competition.name,
           country: 'Italy',
-          logo: data.competition.emblem || '',
+          logo: matchData.competition.emblem || '',
           flag: 'https://flagsapi.com/it/flat/64.png',
-          season: data.season.startDate ? new Date(data.season.startDate).getFullYear() : 2024,
-          round: `Matchday ${data.matchday}`,
+          season: matchData.season.startDate ? new Date(matchData.season.startDate).getFullYear() : 2024,
+          round: `Matchday ${matchData.matchday}`,
         },
         teams: {
           home: {
-            id: data.homeTeam.id.toString(),
-            name: data.homeTeam.name,
-            logo: data.homeTeam.crest || '',
-            winner: data.score.winner === 'HOME_TEAM',
+            id: matchData.homeTeam.id.toString(),
+            name: matchData.homeTeam.name,
+            logo: matchData.homeTeam.crest || '',
+            winner: matchData.score.winner === 'HOME_TEAM',
           },
           away: {
-            id: data.awayTeam.id.toString(),
-            name: data.awayTeam.name,
-            logo: data.awayTeam.crest || '',
-            winner: data.score.winner === 'AWAY_TEAM',
+            id: matchData.awayTeam.id.toString(),
+            name: matchData.awayTeam.name,
+            logo: matchData.awayTeam.crest || '',
+            winner: matchData.score.winner === 'AWAY_TEAM',
           },
         },
         goals: {
-          home: data.score.fullTime.home,
-          away: data.score.fullTime.away,
+          home: matchData.score.fullTime.home,
+          away: matchData.score.fullTime.away,
         },
         score: {
           halftime: {
-            home: data.score.halfTime.home,
-            away: data.score.halfTime.away,
+            home: matchData.score.halfTime.home,
+            away: matchData.score.halfTime.away,
           },
           fulltime: {
-            home: data.score.fullTime.home,
-            away: data.score.fullTime.away,
+            home: matchData.score.fullTime.home,
+            away: matchData.score.fullTime.away,
           },
           extratime: {
-            home: data.score.extraTime?.home,
-            away: data.score.extraTime?.away,
+            home: matchData.score.extraTime?.home,
+            away: matchData.score.extraTime?.away,
           },
           penalty: {
-            home: data.score.penalties?.home,
-            away: data.score.penalties?.away,
+            home: matchData.score.penalties?.home,
+            away: matchData.score.penalties?.away,
           },
         },
       };
 
       setMatchDetails(transformedMatch);
+
+      // Generate mock events based on the score (since free API doesn't provide events)
+      if (matchData.score.fullTime.home !== null && matchData.score.fullTime.away !== null) {
+        const mockEvents: Event[] = [];
+        
+        // Generate home team goals
+        for (let i = 0; i < matchData.score.fullTime.home; i++) {
+          mockEvents.push({
+            time: { elapsed: 15 + (i * 20) },
+            team: {
+              id: matchData.homeTeam.id.toString(),
+              name: matchData.homeTeam.name,
+              logo: matchData.homeTeam.crest || '',
+            },
+            player: {
+              id: `player_home_${i}`,
+              name: `Giocatore ${matchData.homeTeam.shortName} ${i + 1}`,
+            },
+            type: 'goal',
+            detail: 'Normal Goal',
+          });
+        }
+
+        // Generate away team goals
+        for (let i = 0; i < matchData.score.fullTime.away; i++) {
+          mockEvents.push({
+            time: { elapsed: 25 + (i * 25) },
+            team: {
+              id: matchData.awayTeam.id.toString(),
+              name: matchData.awayTeam.name,
+              logo: matchData.awayTeam.crest || '',
+            },
+            player: {
+              id: `player_away_${i}`,
+              name: `Giocatore ${matchData.awayTeam.shortName} ${i + 1}`,
+            },
+            type: 'goal',
+            detail: 'Normal Goal',
+          });
+        }
+
+        setEvents(mockEvents);
+      }
+
       setError(null);
-    } else if (apiError) {
-      setError(apiError);
+    } else if (matchError) {
+      setError(matchError);
     }
     
-    setLoading(apiLoading);
-  }, [data, apiLoading, apiError]);
+    setLoading(matchLoading);
+  }, [matchData, matchLoading, matchError]);
 
   const getStatusLong = (status: string): string => {
     const statusMap: { [key: string]: string } = {
