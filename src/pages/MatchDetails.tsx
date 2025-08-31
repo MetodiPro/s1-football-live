@@ -35,9 +35,15 @@ const MatchDetails = () => {
           Indietro
         </Button>
         <Card className="p-6 text-center">
-          <p className="text-muted-foreground">
+          <p className="text-muted-foreground mb-4">
             {error || 'Dettagli partita non disponibili'}
           </p>
+          <Button 
+            variant="outline" 
+            onClick={() => window.location.reload()}
+          >
+            Riprova
+          </Button>
         </Card>
       </div>
     );
@@ -133,7 +139,7 @@ const MatchDetails = () => {
       </Card>
 
       {/* Dettagli risultato */}
-      {match.score && (
+      {match.score && (match.score.fullTime.home !== null || isLive) && (
         <Card className="shadow-card p-6">
           <h3 className="font-semibold mb-4 flex items-center">
             <Target className="w-4 h-4 mr-2" />
@@ -154,6 +160,15 @@ const MatchDetails = () => {
                 <span className="font-mono">
                   {match.score.halfTime.home} - {match.score.halfTime.away}
                 </span>
+              </div>
+            )}
+            {match.score.winner && (
+              <div className="flex justify-between items-center">
+                <span className="text-muted-foreground">Vincitore:</span>
+                <Badge variant="secondary">
+                  {match.score.winner === 'HOME_TEAM' ? match.homeTeam.name :
+                   match.score.winner === 'AWAY_TEAM' ? match.awayTeam.name : 'Pareggio'}
+                </Badge>
               </div>
             )}
           </div>
@@ -192,17 +207,20 @@ const MatchDetails = () => {
         </div>
       </Card>
 
-      {/* Nota sui dettagli aggiuntivi */}
-      <Card className="shadow-card p-6">
-        <h3 className="font-semibold mb-4 flex items-center">
-          <Target className="w-4 h-4 mr-2" />
-          Dettagli aggiuntivi
-        </h3>
-        <p className="text-muted-foreground text-sm">
-          L'app utilizza Football-Data API che fornisce risultati in tempo reale della stagione 2025-2026. 
-          Eventi dettagliati, formazioni e statistiche complete saranno disponibili con l'upgrade dell'API.
-        </p>
-      </Card>
+      {/* Nota sui dettagli aggiuntivi - mostrata solo se la partita non ha molti dati */}
+      {(!match.referees || match.referees.length === 0) && (
+        <Card className="shadow-card p-6 bg-muted/30">
+          <h3 className="font-semibold mb-4 flex items-center">
+            <Target className="w-4 h-4 mr-2" />
+            Informazioni complete
+          </h3>
+          <p className="text-muted-foreground text-sm">
+            Questa partita mostra i dati disponibili dalla Football-Data API. 
+            Alcune informazioni dettagliate come eventi in tempo reale, formazioni e 
+            statistiche avanzate potrebbero non essere disponibili per tutte le partite.
+          </p>
+        </Card>
+      )}
     </main>
   );
 };

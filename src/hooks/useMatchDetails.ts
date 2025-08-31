@@ -60,15 +60,22 @@ export const useMatchDetails = (matchId: string) => {
         body: { endpoint: `matches/${matchId}` }
       });
 
-      if (functionError || data.error) {
-        throw new Error(functionError?.message || data.error || 'Errore nel recupero partita');
+      if (functionError) {
+        console.error('Function error:', functionError);
+        throw new Error(functionError.message);
       }
+
+      if (data.error) {
+        console.error('API error:', data.error);
+        throw new Error(data.error);
+      }
+
+      console.log('Match details from Football-Data:', data);
 
       if (!data) {
         throw new Error('Partita non trovata');
       }
 
-      console.log('Match details fetched successfully from Football-Data');
       setMatchDetails(data);
 
     } catch (err) {
