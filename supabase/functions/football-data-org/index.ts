@@ -19,6 +19,7 @@ serve(async (req) => {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
+        'X-Auth-Token': 'ecefe79f13b44346a96ab4fbec3398c8',
       },
     });
 
