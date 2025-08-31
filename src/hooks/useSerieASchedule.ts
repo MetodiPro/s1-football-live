@@ -40,7 +40,7 @@ export const useSerieASchedule = () => {
         id: match.fixture.id.toString(),
         utcDate: match.fixture.date,
         status: match.fixture.status.short,
-        matchday: match.league.round.replace('Regular Season - ', ''),
+        matchday: parseInt(match.league.round.replace('Regular Season - ', '')), // Convert to number
         homeTeam: {
           id: match.teams.home.id.toString(),
           name: match.teams.home.name,

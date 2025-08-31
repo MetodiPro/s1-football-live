@@ -29,8 +29,8 @@ export function LiveScores() {
       'SUSPENDED': 'Sospesa'
     };
 
-    const isLive = match.status === 'IN_PLAY' || match.status === 'PAUSED';
-    const isFinished = match.status === 'FINISHED';
+    const isLive = match.status === '1H' || match.status === '2H' || match.status === 'HT' || match.status === 'ET' || match.status === 'P';
+    const isFinished = match.status === 'FT';
     
     return {
       id: match.id.toString(),
@@ -105,7 +105,7 @@ export function LiveScores() {
     
     // First, check if there are live matches
     const liveMatches = matches.filter(match => 
-      match.status === 'LIVE' || match.status === 'IN_PLAY' || match.status === 'PAUSED'
+      match.status === '1H' || match.status === '2H' || match.status === 'HT' || match.status === 'ET' || match.status === 'P'
     );
     
     if (liveMatches.length > 0) {
@@ -120,9 +120,9 @@ export function LiveScores() {
       }
       acc[matchday].total++;
       
-      if (match.status === 'FT' || match.status === 'FINISHED') {
+      if (match.status === 'FT') {
         acc[matchday].finished++;
-      } else if (match.status === 'NS' || match.status === 'TBD' || match.status === 'TIMED') {
+      } else if (match.status === 'NS' || match.status === 'TBD' || match.status === 'PST') {
         const matchDate = new Date(match.utcDate);
         if (matchDate >= today) {
           acc[matchday].upcoming++;
