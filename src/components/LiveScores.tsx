@@ -92,8 +92,6 @@ export function LiveScores() {
   const getCurrentMatchday = (): number => {
     if (matches.length === 0) return 1;
     
-    const today = new Date();
-    
     // First, check if there are live matches
     const liveMatches = matches.filter(match => 
       match.status === '1H' || match.status === '2H' || match.status === 'HT' || match.status === 'ET' || match.status === 'P'
@@ -103,59 +101,64 @@ export function LiveScores() {
       return Math.max(...liveMatches.map(match => match.matchday));
     }
     
-    // Find matchdays with both finished and upcoming matches (current round)
-    const matchdayStats = matches.reduce((acc, match) => {
-      const matchday = match.matchday;
-      if (!acc[matchday]) {
-        acc[matchday] = { finished: 0, upcoming: 0, total: 0 };
-      }
-      acc[matchday].total++;
-      
-      if (match.status === 'FT') {
-        acc[matchday].finished++;
-      } else if (match.status === 'NS' || match.status === 'TBD' || match.status === 'PST') {
-        const matchDate = new Date(match.utcDate);
-        if (matchDate >= today) {
-          acc[matchday].upcoming++;
-        }
-      }
-      
-      return acc;
-    }, {} as Record<number, {finished: number, upcoming: number, total: number}>);
+    // Find the latest matchday that has at least one finished match
+    const matchdaysWithFinishedMatches = matches
+      .filter(match => match.status === 'FT')
+      .map(match => match.matchday);
     
-    // Find the matchday that has both finished and upcoming matches (ongoing round)
-    for (const matchday of Object.keys(matchdayStats).map(Number).sort((a, b) => a - b)) {
-      const stats = matchdayStats[matchday];
-      if (stats.finished > 0 && stats.upcoming > 0) {
-        return matchday;
-      }
+    if (matchdaysWithFinishedMatches.length > 0) {
+      return Math.max(...matchdaysWithFinishedMatches);
     }
     
-    // If no mixed matchday, find the most recent with upcoming matches
-    for (const matchday of Object.keys(matchdayStats).map(Number).sort((a, b) => a - b)) {
-      const stats = matchdayStats[matchday];
-      if (stats.upcoming > 0) {
-        return matchday;
-      }
+    // If no finished matches, find the earliest matchday with upcoming matches
+    const matchdaysWithUpcomingMatches = matches
+      .filter(match => match.status === 'NS' || match.status === 'TBD' || match.status === 'PST')
+      .map(match => match.matchday);
+    
+    if (matchdaysWithUpcomingMatches.length > 0) {
+      return Math.min(...matchdaysWithUpcomingMatches);
     }
     
-    // If no upcoming matches, get the most recent completed matchday
-    const finishedMatchdays = Object.keys(matchdayStats)
-      .map(Number)
-      .filter(matchday => matchdayStats[matchday].finished > 0)
-      .sort((a, b) => b - a);
-      
-    return finishedMatchdays[0] || 1;
+    return 1;
   };
 
-  const currentMatchday = getCurrentMatchday();
+  const getLastCompletedMatchday = (): number => {
+    // Find the latest matchday that has at least one finished match
+    const matchdaysWithFinishedMatches = matches
+      .filter(match => match.status === 'FT')
+      .map(match => match.matchday);
+    
+    if (matchdaysWithFinishedMatches.length > 0) {
+      return Math.max(...matchdaysWithFinishedMatches);
+    }
+    
+    return 1;
+  };
+
+  const getNextMatchday = (): number => {
+    const lastCompleted = getLastCompletedMatchday();
+    
+    // Check if there are live matches in a later matchday
+    const liveMatches = matches.filter(match => 
+      match.status === '1H' || match.status === '2H' || match.status === 'HT' || match.status === 'ET' || match.status === 'P'
+    );
+    
+    if (liveMatches.length > 0) {
+      const liveMatchday = Math.max(...liveMatches.map(match => match.matchday));
+      return liveMatchday > lastCompleted ? liveMatchday : lastCompleted + 1;
+    }
+    
+    return lastCompleted + 1;
+  };
+
+  const lastCompletedMatchday = getLastCompletedMatchday();
+  const nextMatchday = getNextMatchday();
   
-  // Get current and next matchdays
-  const nextMatchday = currentMatchday + 1;
+  // Check if next matchday has matches
   const hasNextMatchday = matches.some(match => match.matchday === nextMatchday);
   
   // Determine which matchday to display
-  const displayMatchday = showNext && hasNextMatchday ? nextMatchday : currentMatchday;
+  const displayMatchday = showNext && hasNextMatchday ? nextMatchday : lastCompletedMatchday;
   
   // Get all matches for the display matchday
   const currentMatchdayMatches = matches.filter(match => match.matchday === displayMatchday);
@@ -204,7 +207,7 @@ export function LiveScores() {
               onClick={() => setShowNext(!showNext)}
               className="text-xs"
             >
-              {showNext ? `← Giornata ${currentMatchday}` : `Giornata ${nextMatchday} →`}
+              {showNext ? `← Giornata ${lastCompletedMatchday}` : `Giornata ${nextMatchday} →`}
             </Button>
           )}
           <Button variant="ghost" size="sm" onClick={handleRefresh} className="p-2">
