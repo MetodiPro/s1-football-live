@@ -132,33 +132,33 @@ export function LiveScores() {
       return Math.max(...matchdaysWithFinishedMatches);
     }
     
+    // If no finished matches, return 1
     return 1;
   };
 
-  const getNextMatchday = (): number => {
-    const lastCompleted = getLastCompletedMatchday();
-    
-    // Check if there are live matches in a later matchday
+  const getCurrentActiveMatchday = (): number => {
+    // First, check if there are live matches
     const liveMatches = matches.filter(match => 
       match.status === '1H' || match.status === '2H' || match.status === 'HT' || match.status === 'ET' || match.status === 'P'
     );
     
     if (liveMatches.length > 0) {
-      const liveMatchday = Math.max(...liveMatches.map(match => match.matchday));
-      return liveMatchday > lastCompleted ? liveMatchday : lastCompleted + 1;
+      return Math.max(...liveMatches.map(match => match.matchday));
     }
     
-    return lastCompleted + 1;
+    // Return the last completed matchday
+    return getLastCompletedMatchday();
   };
 
   const lastCompletedMatchday = getLastCompletedMatchday();
-  const nextMatchday = getNextMatchday();
+  const currentActiveMatchday = getCurrentActiveMatchday();
+  const nextMatchday = currentActiveMatchday + 1;
   
   // Check if next matchday has matches
   const hasNextMatchday = matches.some(match => match.matchday === nextMatchday);
   
   // Determine which matchday to display
-  const displayMatchday = showNext && hasNextMatchday ? nextMatchday : lastCompletedMatchday;
+  const displayMatchday = showNext && hasNextMatchday ? nextMatchday : currentActiveMatchday;
   
   // Get all matches for the display matchday
   const currentMatchdayMatches = matches.filter(match => match.matchday === displayMatchday);
@@ -207,7 +207,7 @@ export function LiveScores() {
               onClick={() => setShowNext(!showNext)}
               className="text-xs"
             >
-              {showNext ? `← Giornata ${lastCompletedMatchday}` : `Giornata ${nextMatchday} →`}
+              {showNext ? `← Giornata ${currentActiveMatchday}` : `Giornata ${nextMatchday} →`}
             </Button>
           )}
           <Button variant="ghost" size="sm" onClick={handleRefresh} className="p-2">
