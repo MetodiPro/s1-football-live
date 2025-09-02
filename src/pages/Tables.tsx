@@ -92,7 +92,7 @@ const Tables = () => {
         {/* Mobile View */}
         <div className="block md:hidden">
           <div className="p-4 bg-muted/30 border-b border-border/50">
-            <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wide">Classifica</h3>
+            <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wide">Classifica Serie A</h3>
           </div>
           <div className="divide-y divide-border/30">
             {standings.map((team) => {
@@ -102,69 +102,75 @@ const Tables = () => {
                   key={team.team.id}
                   className={`p-4 ${getPositionStyle(team.position)}`}
                 >
-                  {/* Position and Team */}
-                  <div className="flex items-center justify-between mb-3">
+                  {/* Main Row: Position, Team, Points */}
+                  <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-3">
-                      <div className="flex flex-col items-center">
+                      {/* Position */}
+                      <div className="flex flex-col items-center min-w-[40px]">
                         <span className="text-lg font-bold">{team.position}</span>
                         {badge && (
-                          <Badge variant={badge.variant} className="text-xs px-1 py-0">
+                          <Badge variant={badge.variant} className="text-xs px-1 py-0 mt-1">
                             {badge.text}
                           </Badge>
                         )}
                       </div>
+                      
+                      {/* Team */}
                       <div className="flex items-center space-x-2">
                         <div className="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center flex-shrink-0">
                           <span className="text-xs font-bold text-primary">
                             {team.team.shortName?.substring(0, 2) || team.team.name.substring(0, 2).toUpperCase()}
                           </span>
                         </div>
-                        <div>
-                          <div className="font-medium text-sm">{team.team.name}</div>
+                        <span className="font-medium text-base">{team.team.name}</span>
+                      </div>
+                    </div>
+                    
+                    {/* Points */}
+                    <div className="text-right">
+                      <div className="text-2xl font-bold text-primary">{team.points}</div>
+                      <div className="text-xs text-muted-foreground uppercase">Punti</div>
+                    </div>
+                  </div>
+                  
+                  {/* Stats Row */}
+                  <div className="mt-4 pt-3 border-t border-border/30">
+                    <div className="flex justify-between text-sm">
+                      <div className="text-center">
+                        <div className="font-medium">{team.playedGames}</div>
+                        <div className="text-xs text-muted-foreground">Partite</div>
+                      </div>
+                      <div className="text-center">
+                        <div className="font-medium text-green-600">{team.won}</div>
+                        <div className="text-xs text-muted-foreground">Vinte</div>
+                      </div>
+                      <div className="text-center">
+                        <div className="font-medium text-yellow-600">{team.draw}</div>
+                        <div className="text-xs text-muted-foreground">Pari</div>
+                      </div>
+                      <div className="text-center">
+                        <div className="font-medium text-red-600">{team.lost}</div>
+                        <div className="text-xs text-muted-foreground">Perse</div>
+                      </div>
+                    </div>
+                    
+                    <div className="flex justify-center mt-3 pt-2 border-t border-border/20">
+                      <div className="flex space-x-6 text-sm">
+                        <div className="text-center">
+                          <div className="font-medium">{team.goalsFor}</div>
+                          <div className="text-xs text-muted-foreground">GF</div>
+                        </div>
+                        <div className="text-center">
+                          <div className="font-medium">{team.goalsAgainst}</div>
+                          <div className="text-xs text-muted-foreground">GS</div>
+                        </div>
+                        <div className="text-center">
+                          <div className={`font-medium ${team.goalDifference > 0 ? 'text-green-600' : team.goalDifference < 0 ? 'text-red-600' : ''}`}>
+                            {team.goalDifference > 0 ? '+' : ''}{team.goalDifference}
+                          </div>
+                          <div className="text-xs text-muted-foreground">Diff</div>
                         </div>
                       </div>
-                    </div>
-                    <div className="text-right">
-                      <div className="text-xl font-bold text-primary">{team.points}</div>
-                      <div className="text-xs text-muted-foreground">punti</div>
-                    </div>
-                  </div>
-                  
-                  {/* Stats Grid */}
-                  <div className="grid grid-cols-4 gap-3 text-center">
-                    <div>
-                      <div className="text-sm font-medium">{team.playedGames}</div>
-                      <div className="text-xs text-muted-foreground">G</div>
-                    </div>
-                    <div>
-                      <div className="text-sm font-medium text-green-600">{team.won}</div>
-                      <div className="text-xs text-muted-foreground">V</div>
-                    </div>
-                    <div>
-                      <div className="text-sm font-medium text-yellow-600">{team.draw}</div>
-                      <div className="text-xs text-muted-foreground">N</div>
-                    </div>
-                    <div>
-                      <div className="text-sm font-medium text-red-600">{team.lost}</div>
-                      <div className="text-xs text-muted-foreground">P</div>
-                    </div>
-                  </div>
-                  
-                  {/* Goals Stats */}
-                  <div className="grid grid-cols-3 gap-3 text-center mt-3 pt-3 border-t border-border/30">
-                    <div>
-                      <div className="text-sm font-medium">{team.goalsFor}</div>
-                      <div className="text-xs text-muted-foreground">GF</div>
-                    </div>
-                    <div>
-                      <div className="text-sm font-medium">{team.goalsAgainst}</div>
-                      <div className="text-xs text-muted-foreground">GS</div>
-                    </div>
-                    <div>
-                      <div className={`text-sm font-medium ${team.goalDifference > 0 ? 'text-green-600' : team.goalDifference < 0 ? 'text-red-600' : ''}`}>
-                        {team.goalDifference > 0 ? '+' : ''}{team.goalDifference}
-                      </div>
-                      <div className="text-xs text-muted-foreground">Dif</div>
                     </div>
                   </div>
                 </div>
@@ -228,9 +234,9 @@ const Tables = () => {
                     <div className="col-span-1 text-center text-sm font-medium">{team.goalsFor}</div>
                     <div className="col-span-1 text-center text-sm font-medium">{team.goalsAgainst}</div>
                     <div className="col-span-1 text-center text-sm">
-                      <span className={team.goalDifference > 0 ? 'text-green-600' : team.goalDifference < 0 ? 'text-red-600' : ''}>
+                      <div className={team.goalDifference > 0 ? 'text-green-600' : team.goalDifference < 0 ? 'text-red-600' : ''}>
                         {team.goalDifference > 0 ? '+' : ''}{team.goalDifference}
-                      </span>
+                      </div>
                     </div>
                     <div className="col-span-2 text-center">
                       <span className="text-lg font-bold text-primary">{team.points}</span>
