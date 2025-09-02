@@ -10,7 +10,7 @@ import Index from "./pages/Index";
 import Matches from "./pages/Matches";
 import Schedule from "./pages/Schedule";
 import Tables from "./pages/Tables";
-import Profile from "./pages/Profile";
+import Napoli from "./pages/Napoli";
 import MatchDetails from "./pages/MatchDetails";
 import NotFound from "./pages/NotFound";
 
@@ -33,7 +33,7 @@ const App = () => {
               <Route path="/match/:id" element={<MatchDetails />} />
               <Route path="/schedule" element={<Schedule />} />
               <Route path="/tables" element={<Tables />} />
-              <Route path="/profile" element={<Profile />} />
+              <Route path="/napoli" element={<Napoli />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>

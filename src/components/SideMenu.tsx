@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
-import { Home, Calendar, Trophy, Users, Menu } from "lucide-react";
+import { Home, Calendar, Trophy, Users, Menu, User } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 
 const menuItems = [
@@ -8,6 +8,7 @@ const menuItems = [
   { icon: Calendar, label: "CALENDARIO SERIE A", path: "/schedule" },
   { icon: Users, label: "CLASSIFICA SERIE A", path: "/tables" },
   { icon: Trophy, label: "UCL", path: "/matches" },
+  { icon: User, label: "SSC NAPOLI", path: "/napoli" },
 ];
 
 export function SideMenu() {

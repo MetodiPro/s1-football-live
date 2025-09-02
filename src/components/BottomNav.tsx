@@ -13,7 +13,7 @@ const navItems: NavItem[] = [
   { icon: <Calendar className="w-5 h-5" />, label: "CALENDARIO SERIE A", path: "/schedule" },
   { icon: <TrendingUp className="w-5 h-5" />, label: "CLASSIFICA SERIE A", path: "/tables" },
   { icon: <Trophy className="w-5 h-5" />, label: "UCL", path: "/matches" },
-  { icon: <User className="w-5 h-5" />, label: "Profilo", path: "/profile" },
+  { icon: <User className="w-5 h-5" />, label: "SSC NAPOLI", path: "/napoli" },
 ];
 
 export function BottomNav() {
