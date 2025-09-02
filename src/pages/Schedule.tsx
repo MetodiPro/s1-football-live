@@ -116,11 +116,11 @@ const Schedule = () => {
                   </div>
                   
                   <div className="px-4">
-                    {match.status === 'FINISHED' ? (
+                    {match.status === 'FT' ? (
                       <div className="text-lg font-bold text-center">
                         {match.score.fullTime.home} - {match.score.fullTime.away}
                       </div>
-                    ) : match.status === 'IN_PLAY' ? (
+                    ) : (match.status === '1H' || match.status === '2H' || match.status === 'HT' || match.status === 'ET' || match.status === 'P') ? (
                       <Badge variant="destructive" className="animate-pulse">
                         LIVE
                       </Badge>
@@ -136,12 +136,12 @@ const Schedule = () => {
                       <span className="font-medium text-sm text-right">{match.awayTeam.name}</span>
                     </div>
                     <Badge 
-                      variant={match.status === 'FINISHED' ? 'secondary' : 
-                               match.status === 'IN_PLAY' ? 'destructive' : 'outline'}
+                      variant={match.status === 'FT' ? 'secondary' : 
+                               (match.status === '1H' || match.status === '2H' || match.status === 'HT' || match.status === 'ET' || match.status === 'P') ? 'destructive' : 'outline'}
                       className="text-xs"
                     >
-                      {match.status === 'FINISHED' ? 'FT' : 
-                       match.status === 'IN_PLAY' ? 'LIVE' : 'PROSS.'}
+                      {match.status === 'FT' ? 'FINALE' : 
+                       (match.status === '1H' || match.status === '2H' || match.status === 'HT' || match.status === 'ET' || match.status === 'P') ? 'LIVE' : 'PROSS.'}
                     </Badge>
                   </div>
                 </div>
