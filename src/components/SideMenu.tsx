@@ -4,10 +4,10 @@ import { Home, Calendar, Trophy, Users, Menu } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 
 const menuItems = [
-  { icon: Home, label: "Home", path: "/" },
-  { icon: Trophy, label: "UCL", path: "/matches" },
+  { icon: Home, label: "HOME", path: "/" },
   { icon: Calendar, label: "CALENDARIO SERIE A", path: "/schedule" },
-  { icon: Users, label: "Classifiche", path: "/tables" },
+  { icon: Users, label: "CLASSIFICA SERIE A", path: "/tables" },
+  { icon: Trophy, label: "UCL", path: "/matches" },
 ];
 
 export function SideMenu() {
