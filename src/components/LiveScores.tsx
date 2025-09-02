@@ -9,7 +9,7 @@ import { useState } from "react";
 
 export function LiveScores() {
   const { matches, loading, error, refetch } = useSerieASchedule();
-  const [selectedMatchday, setSelectedMatchday] = useState<number | null>(null);
+  const [showNext, setShowNext] = useState(false);
 
   const handleRefresh = async () => {
     await refetch();
@@ -150,14 +150,14 @@ export function LiveScores() {
 
   const currentMatchday = getCurrentMatchday();
   
-  // Get available matchdays
-  const availableMatchdays = [...new Set(matches.map(match => match.matchday))]
-    .sort((a, b) => a - b); // Sort ascending (first matchday first)
+  // Get current and next matchdays
+  const nextMatchday = currentMatchday + 1;
+  const hasNextMatchday = matches.some(match => match.matchday === nextMatchday);
   
-  // Set default selected matchday if not set
-  const displayMatchday = selectedMatchday || currentMatchday;
+  // Determine which matchday to display
+  const displayMatchday = showNext && hasNextMatchday ? nextMatchday : currentMatchday;
   
-  // Get all matches for the selected matchday
+  // Get all matches for the display matchday
   const currentMatchdayMatches = matches.filter(match => match.matchday === displayMatchday);
   const convertedMatches = currentMatchdayMatches.map(convertMatch);
   
@@ -190,40 +190,27 @@ export function LiveScores() {
             Serie A - Giornata {displayMatchday}
           </h2>
           <p className="text-sm text-muted-foreground">
-            {liveMatches.length > 0 ? 'In corso' : 
+            {showNext && hasNextMatchday ? 'Prossima giornata' :
+             liveMatches.length > 0 ? 'In corso' : 
              convertedMatches.some(m => m.status === 'upcoming') ? 'In corso' : 
              'Completata'}
           </p>
         </div>
-        <Button variant="ghost" size="sm" onClick={handleRefresh} className="p-2">
-          <RefreshCw className="w-4 h-4" />
-        </Button>
-      </div>
-
-      {/* Matchday selector */}
-      <div className="flex flex-wrap gap-2 p-4 bg-muted/30 rounded-lg">
-        <span className="text-sm text-muted-foreground mr-2 flex items-center">Giornate:</span>
-        {availableMatchdays.map((matchday) => (
-          <button
-            key={matchday}
-            onClick={() => setSelectedMatchday(matchday)}
-            className={`
-              w-8 h-8 rounded-full flex items-center justify-center text-xs font-medium
-              transition-all duration-200 hover:scale-110
-              ${displayMatchday === matchday
-                ? 'bg-primary text-primary-foreground shadow-md' 
-                : 'bg-background border border-border hover:bg-muted text-foreground'
-              }
-              ${matchday === currentMatchday && displayMatchday !== matchday
-                ? 'ring-2 ring-primary/50' 
-                : ''
-              }
-            `}
-            title={`Giornata ${matchday}${matchday === currentMatchday ? ' (corrente)' : ''}`}
-          >
-            {matchday}
-          </button>
-        ))}
+        <div className="flex items-center gap-2">
+          {hasNextMatchday && (
+            <Button 
+              variant={showNext ? "default" : "outline"} 
+              size="sm" 
+              onClick={() => setShowNext(!showNext)}
+              className="text-xs"
+            >
+              {showNext ? `← Giornata ${currentMatchday}` : `Giornata ${nextMatchday} →`}
+            </Button>
+          )}
+          <Button variant="ghost" size="sm" onClick={handleRefresh} className="p-2">
+            <RefreshCw className="w-4 h-4" />
+          </Button>
+        </div>
       </div>
 
       {/* Live matches */}
