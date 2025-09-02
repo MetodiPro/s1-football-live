@@ -153,7 +153,7 @@ export function LiveScores() {
   
   // Get available matchdays
   const availableMatchdays = [...new Set(matches.map(match => match.matchday))]
-    .sort((a, b) => b - a); // Sort descending (most recent first)
+    .sort((a, b) => a - b); // Sort ascending (first matchday first)
   
   // Set default selected matchday if not set
   const displayMatchday = selectedMatchday || currentMatchday;
