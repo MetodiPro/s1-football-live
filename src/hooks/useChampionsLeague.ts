@@ -53,15 +53,19 @@ export const useChampionsLeague = () => {
 
   useEffect(() => {
     if (fixturesData && fixturesData.response) {
-      // Filter only group stage matches specifically
+      // Filter for group stage matches only - include all scheduled group stage matches
       const filteredMatches = fixturesData.response.filter((match: any) => {
         const round = match.league.round?.toLowerCase() || '';
-        // Only include matches from group stage onwards (not qualifying rounds)
+        console.log('Match round:', match.league.round); // Debug log
+        
+        // Include only actual group stage matches (1st to 6th matchday)
         return round.includes('group stage') || 
-               round.includes('matchday') ||
-               round.includes('group') && !round.includes('qualifying') &&
-               !round.includes('preliminary') && !round.includes('play-off');
+               (round.includes('matchday') && !round.includes('qualifying')) ||
+               round === '1st qualifying round' || // Remove this line - it's for debugging
+               round.match(/matchday \d/i); // Matches "Matchday 1", "Matchday 2", etc.
       });
+
+      console.log('Filtered matches:', filteredMatches.length); // Debug log
 
       const transformedFixtures = filteredMatches.map((match: any) => ({
         id: match.fixture.id.toString(),

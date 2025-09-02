@@ -26,15 +26,35 @@ export const useChampionsTopScorers = () => {
 
   useEffect(() => {
     if (data && data.response) {
-      // Filter players who have played ONLY in group stage or later (exclude qualifiers completely)
+      console.log('Raw scorers data:', data.response); // Debug log
+      
+      // If group stage hasn't started yet, show no players
+      // Check if we have any actual group stage matches played
+      const hasGroupStageStarted = data.response.some((item: any) => {
+        const stats = item.statistics[0];
+        return stats && stats.games && stats.games.appearences > 0 && 
+               !stats.league?.round?.toLowerCase().includes('qualifying');
+      });
+
+      if (!hasGroupStageStarted) {
+        console.log('Group stage not started yet, showing no players');
+        setScorers([]);
+        setError(null);
+        setLoading(apiLoading);
+        return;
+      }
+
+      // If group stage has started, filter properly
       const filteredPlayers = data.response.filter((item: any) => {
         const stats = item.statistics[0];
         if (!stats || !stats.games || stats.games.appearences === 0) return false;
         
-        // Check if the player's team is in the main tournament (not qualifiers)
-        // Players in qualifiers only would have different league round info
-        // We want players whose statistics are from the main Champions League phase
-        return stats.league && stats.league.id === 2 && stats.league.name.includes('Champions League');
+        // Exclude any qualifying rounds data
+        const round = stats.league?.round?.toLowerCase() || '';
+        return !round.includes('qualifying') && 
+               !round.includes('preliminary') && 
+               !round.includes('play-off') &&
+               stats.league && stats.league.id === 2;
       });
 
       const transformedScorers = filteredPlayers.map((item: any) => ({
@@ -81,13 +101,34 @@ export const useChampionsTopAssists = () => {
 
   useEffect(() => {
     if (data && data.response) {
-      // Filter players who have played ONLY in group stage or later (exclude qualifiers completely)
+      console.log('Raw assists data:', data.response); // Debug log
+      
+      // If group stage hasn't started yet, show no players
+      const hasGroupStageStarted = data.response.some((item: any) => {
+        const stats = item.statistics[0];
+        return stats && stats.games && stats.games.appearences > 0 && 
+               !stats.league?.round?.toLowerCase().includes('qualifying');
+      });
+
+      if (!hasGroupStageStarted) {
+        console.log('Group stage not started yet, showing no assists players');
+        setAssists([]);
+        setError(null);
+        setLoading(apiLoading);
+        return;
+      }
+
+      // If group stage has started, filter properly
       const filteredPlayers = data.response.filter((item: any) => {
         const stats = item.statistics[0];
         if (!stats || !stats.games || stats.games.appearences === 0) return false;
         
-        // Check if the player's team is in the main tournament (not qualifiers)
-        return stats.league && stats.league.id === 2 && stats.league.name.includes('Champions League');
+        // Exclude any qualifying rounds data
+        const round = stats.league?.round?.toLowerCase() || '';
+        return !round.includes('qualifying') && 
+               !round.includes('preliminary') && 
+               !round.includes('play-off') &&
+               stats.league && stats.league.id === 2;
       });
 
       const transformedAssists = filteredPlayers.map((item: any) => ({
