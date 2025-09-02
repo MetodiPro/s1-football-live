@@ -5,7 +5,6 @@ import { MatchCard } from "./MatchCard";
 import { useSerieASchedule, ScheduleMatch } from "@/hooks/useSerieASchedule";
 import { toast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useState } from "react";
 
 export function LiveScores() {
@@ -186,42 +185,45 @@ export function LiveScores() {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <div>
-            <h2 className="text-lg font-bold text-foreground">
-              Serie A
-            </h2>
-            <p className="text-sm text-muted-foreground">
-              {liveMatches.length > 0 ? 'In corso' : 
-               convertedMatches.some(m => m.status === 'upcoming') ? 'In corso' : 
-               'Completata'}
-            </p>
-          </div>
-          <div className="flex flex-col">
-            <label className="text-xs text-muted-foreground mb-1">Giornata</label>
-            <Select
-              value={displayMatchday.toString()}
-              onValueChange={(value) => setSelectedMatchday(parseInt(value))}
-            >
-              <SelectTrigger className="w-[140px] h-8">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {availableMatchdays.map((matchday) => (
-                  <SelectItem key={matchday} value={matchday.toString()}>
-                    Giornata {matchday}
-                    {matchday === currentMatchday && (
-                      <span className="text-xs text-primary ml-2">(corrente)</span>
-                    )}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+        <div>
+          <h2 className="text-lg font-bold text-foreground">
+            Serie A - Giornata {displayMatchday}
+          </h2>
+          <p className="text-sm text-muted-foreground">
+            {liveMatches.length > 0 ? 'In corso' : 
+             convertedMatches.some(m => m.status === 'upcoming') ? 'In corso' : 
+             'Completata'}
+          </p>
         </div>
         <Button variant="ghost" size="sm" onClick={handleRefresh} className="p-2">
           <RefreshCw className="w-4 h-4" />
         </Button>
+      </div>
+
+      {/* Matchday selector */}
+      <div className="flex flex-wrap gap-2 p-4 bg-muted/30 rounded-lg">
+        <span className="text-sm text-muted-foreground mr-2 flex items-center">Giornate:</span>
+        {availableMatchdays.map((matchday) => (
+          <button
+            key={matchday}
+            onClick={() => setSelectedMatchday(matchday)}
+            className={`
+              w-8 h-8 rounded-full flex items-center justify-center text-xs font-medium
+              transition-all duration-200 hover:scale-110
+              ${displayMatchday === matchday
+                ? 'bg-primary text-primary-foreground shadow-md' 
+                : 'bg-background border border-border hover:bg-muted text-foreground'
+              }
+              ${matchday === currentMatchday && displayMatchday !== matchday
+                ? 'ring-2 ring-primary/50' 
+                : ''
+              }
+            `}
+            title={`Giornata ${matchday}${matchday === currentMatchday ? ' (corrente)' : ''}`}
+          >
+            {matchday}
+          </button>
+        ))}
       </div>
 
       {/* Live matches */}
