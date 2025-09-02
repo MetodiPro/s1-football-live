@@ -5,8 +5,8 @@ import { Link, useLocation } from "react-router-dom";
 
 const menuItems = [
   { icon: Home, label: "Home", path: "/" },
-  { icon: Trophy, label: "Partite", path: "/matches" },
-  { icon: Calendar, label: "Calendario", path: "/schedule" },
+  { icon: Trophy, label: "UCL", path: "/matches" },
+  { icon: Calendar, label: "CALENDARIO SERIE A", path: "/schedule" },
   { icon: Users, label: "Classifiche", path: "/tables" },
 ];
 

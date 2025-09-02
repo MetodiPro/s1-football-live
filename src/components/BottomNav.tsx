@@ -10,8 +10,8 @@ interface NavItem {
 
 const navItems: NavItem[] = [
   { icon: <Home className="w-5 h-5" />, label: "Home", path: "/" },
-  { icon: <Trophy className="w-5 h-5" />, label: "Partite", path: "/matches" },
-  { icon: <Calendar className="w-5 h-5" />, label: "Calendario", path: "/schedule" },
+  { icon: <Trophy className="w-5 h-5" />, label: "UCL", path: "/matches" },
+  { icon: <Calendar className="w-5 h-5" />, label: "CALENDARIO SERIE A", path: "/schedule" },
   { icon: <TrendingUp className="w-5 h-5" />, label: "Classifiche", path: "/tables" },
   { icon: <User className="w-5 h-5" />, label: "Profilo", path: "/profile" },
 ];
