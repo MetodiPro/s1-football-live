@@ -19,6 +19,9 @@ interface Match {
   status: "live" | "upcoming" | "finished";
   time: string;
   minute?: number;
+  venue?: string;
+  referee?: string;
+  kickoffTime?: string;
 }
 
 interface MatchCardProps {
@@ -129,6 +132,26 @@ export function MatchCard({ match }: MatchCardProps) {
               </Badge>
             </div>
           )}
+          
+          {/* Match Details */}
+          <div className="space-y-1 pt-2 border-t border-border/50">
+            {match.kickoffTime && (
+              <div className="flex items-center justify-center text-xs text-muted-foreground">
+                <Clock className="w-3 h-3 mr-1" />
+                Orario: {match.kickoffTime}
+              </div>
+            )}
+            {match.venue && (
+              <div className="text-xs text-muted-foreground text-center">
+                📍 {match.venue}
+              </div>
+            )}
+            {match.referee && (
+              <div className="text-xs text-muted-foreground text-center">
+                👨‍⚖️ {match.referee}
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </Card>

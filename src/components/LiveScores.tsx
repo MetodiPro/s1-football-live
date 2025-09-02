@@ -34,6 +34,12 @@ export function LiveScores() {
     const isLive = match.status === '1H' || match.status === '2H' || match.status === 'HT' || match.status === 'ET' || match.status === 'P';
     const isFinished = match.status === 'FT';
     
+    const matchDate = new Date(match.utcDate);
+    const kickoffTime = matchDate.toLocaleTimeString('it-IT', { 
+      hour: '2-digit', 
+      minute: '2-digit' 
+    });
+    
     return {
       id: match.id.toString(),
       homeTeam: { 
@@ -50,8 +56,11 @@ export function LiveScores() {
       status: (isLive ? 'live' : isFinished ? 'finished' : 'upcoming') as 'live' | 'finished' | 'upcoming',
       time: isLive ? 'In Diretta' : 
             isFinished ? 'Finale' : 
-            new Date(match.utcDate).toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' }),
+            kickoffTime,
       minute: undefined,
+      venue: match.venue ? `${match.venue.name}, ${match.venue.city}` : undefined,
+      referee: match.referee,
+      kickoffTime,
     };
   };
 

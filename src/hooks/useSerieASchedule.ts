@@ -24,6 +24,11 @@ export interface ScheduleMatch {
       away: number | null;
     };
   };
+  venue?: {
+    name: string;
+    city: string;
+  };
+  referee?: string;
 }
 
 export const useSerieASchedule = () => {
@@ -59,6 +64,11 @@ export const useSerieASchedule = () => {
             away: match.goals.away,
           },
         },
+        venue: match.fixture.venue ? {
+          name: match.fixture.venue.name,
+          city: match.fixture.venue.city,
+        } : undefined,
+        referee: match.fixture.referee || undefined,
       }));
       
       setMatches(transformedMatches);
