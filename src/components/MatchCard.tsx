@@ -3,6 +3,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Clock, Circle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { useState } from "react";
 
 interface Team {
   name: string;
@@ -26,6 +27,8 @@ interface MatchCardProps {
 
 export function MatchCard({ match }: MatchCardProps) {
   const navigate = useNavigate();
+  const [homeLogoError, setHomeLogoError] = useState(false);
+  const [awayLogoError, setAwayLogoError] = useState(false);
   const isLive = match.status === "live";
   const isFinished = match.status === "finished";
 
@@ -60,10 +63,21 @@ export function MatchCard({ match }: MatchCardProps) {
           <div className="flex items-center justify-between">
             {/* Home Team */}
             <div className="flex items-center space-x-2 flex-1 min-w-0">
-              <div className="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center flex-shrink-0">
-                <span className="text-xs font-bold text-primary">
-                  {match.homeTeam.name.substring(0, 3).toUpperCase()}
-                </span>
+              <div className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 overflow-hidden">
+                {match.homeTeam.logo && !homeLogoError ? (
+                  <img 
+                    src={match.homeTeam.logo} 
+                    alt={`${match.homeTeam.name} logo`}
+                    className="w-full h-full object-contain"
+                    onError={() => setHomeLogoError(true)}
+                  />
+                ) : (
+                  <div className="w-full h-full bg-primary/10 rounded-full flex items-center justify-center">
+                    <span className="text-xs font-bold text-primary">
+                      {match.homeTeam.name.substring(0, 3).toUpperCase()}
+                    </span>
+                  </div>
+                )}
               </div>
               <span className="font-medium text-card-foreground truncate text-sm">
                 {match.homeTeam.name}
@@ -88,10 +102,21 @@ export function MatchCard({ match }: MatchCardProps) {
               <span className="font-medium text-card-foreground truncate text-sm text-right">
                 {match.awayTeam.name}
               </span>
-              <div className="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center flex-shrink-0">
-                <span className="text-xs font-bold text-primary">
-                  {match.awayTeam.name.substring(0, 3).toUpperCase()}
-                </span>
+              <div className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 overflow-hidden">
+                {match.awayTeam.logo && !awayLogoError ? (
+                  <img 
+                    src={match.awayTeam.logo} 
+                    alt={`${match.awayTeam.name} logo`}
+                    className="w-full h-full object-contain"
+                    onError={() => setAwayLogoError(true)}
+                  />
+                ) : (
+                  <div className="w-full h-full bg-primary/10 rounded-full flex items-center justify-center">
+                    <span className="text-xs font-bold text-primary">
+                      {match.awayTeam.name.substring(0, 3).toUpperCase()}
+                    </span>
+                  </div>
+                )}
               </div>
             </div>
           </div>

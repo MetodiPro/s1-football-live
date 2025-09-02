@@ -162,6 +162,23 @@ export function LiveScores() {
   
   // Get all matches for the display matchday
   const currentMatchdayMatches = matches.filter(match => match.matchday === displayMatchday);
+  
+  // Group matches by date
+  const matchesByDate = currentMatchdayMatches.reduce((acc, match) => {
+    const matchDate = new Date(match.utcDate).toLocaleDateString('it-IT', {
+      weekday: 'long',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
+    
+    if (!acc[matchDate]) {
+      acc[matchDate] = [];
+    }
+    acc[matchDate].push(match);
+    return acc;
+  }, {} as Record<string, typeof currentMatchdayMatches>);
+  
   const convertedMatches = currentMatchdayMatches.map(convertMatch);
   
   // Separate live and other matches
@@ -236,23 +253,29 @@ export function LiveScores() {
         </Card>
       )}
       
-      {/* Other matches */}
-      {otherMatches.length > 0 && (
-        <Card className="p-4 shadow-card">
-          {liveMatches.length > 0 && (
+      {/* Matches grouped by date */}
+      {Object.entries(matchesByDate).map(([date, dateMatches]) => {
+        const convertedDateMatches = dateMatches.map(convertMatch);
+        const nonLiveMatches = convertedDateMatches.filter(match => match.status !== 'live');
+        
+        // Skip this date if all matches are live (already shown above)
+        if (nonLiveMatches.length === 0) return null;
+        
+        return (
+          <Card key={date} className="p-4 shadow-card">
             <div className="flex items-center space-x-2 mb-3">
               <span className="text-sm font-bold text-muted-foreground uppercase tracking-wide">
-                Altre partite
+                {date}
               </span>
             </div>
-          )}
-          <div className="space-y-2">
-            {otherMatches.map((match) => (
-              <MatchCard key={match.id} match={match} />
-            ))}
-          </div>
-        </Card>
-      )}
+            <div className="space-y-2">
+              {nonLiveMatches.map((match) => (
+                <MatchCard key={match.id} match={match} />
+              ))}
+            </div>
+          </Card>
+        );
+      })}
     </div>
   );
 }
