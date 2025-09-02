@@ -40,7 +40,8 @@ export const useSerieAStandings = () => {
 
   useEffect(() => {
     if (data && data.response && data.response[0]) {
-      const transformedStandings = data.response[0].league.standings[0].map((team: any) => ({
+      const leagueData = data.response[0].league;
+      const transformedStandings = leagueData.standings[0].map((team: any) => ({
         position: team.rank,
         team: {
           id: team.team.id.toString(),
@@ -60,10 +61,16 @@ export const useSerieAStandings = () => {
       }));
       
       setStandings(transformedStandings);
+      
+      // Calculate current matchday based on average games played
+      const averageGamesPlayed = Math.round(
+        transformedStandings.reduce((sum: number, team: any) => sum + team.playedGames, 0) / transformedStandings.length
+      );
+      
       setSeason({
         startDate: '2025-08-01',
         endDate: '2026-05-31',
-        currentMatchday: 1
+        currentMatchday: Math.max(1, averageGamesPlayed)
       });
       setError(null);
     } else if (apiError) {

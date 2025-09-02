@@ -91,13 +91,15 @@ const Tables = () => {
       <Card className="shadow-card overflow-hidden">
         {/* Header */}
         <div className="p-4 bg-muted/30 border-b border-border/50">
-          <div className="grid grid-cols-12 gap-2 text-xs font-medium text-muted-foreground uppercase tracking-wide">
+          <div className="grid grid-cols-14 gap-2 text-xs font-medium text-muted-foreground uppercase tracking-wide">
             <div className="col-span-1 text-center">Pos</div>
             <div className="col-span-4">Squadra</div>
             <div className="col-span-1 text-center">G</div>
             <div className="col-span-1 text-center">V</div>
             <div className="col-span-1 text-center">N</div>
             <div className="col-span-1 text-center">P</div>
+            <div className="col-span-1 text-center">GF</div>
+            <div className="col-span-1 text-center">GS</div>
             <div className="col-span-1 text-center">Dif</div>
             <div className="col-span-2 text-center">Punti</div>
           </div>
@@ -112,7 +114,7 @@ const Tables = () => {
                 key={team.team.id}
                 className={`p-3 transition-colors hover:bg-muted/20 ${getPositionStyle(team.position)}`}
               >
-                <div className="grid grid-cols-12 gap-2 items-center">
+                <div className="grid grid-cols-14 gap-2 items-center">
                   <div className="col-span-1 text-center">
                     <div className="flex flex-col items-center">
                       <span className="font-bold text-sm">{team.position}</span>
@@ -137,6 +139,8 @@ const Tables = () => {
                   <div className="col-span-1 text-center text-sm text-green-600 font-medium">{team.won}</div>
                   <div className="col-span-1 text-center text-sm text-yellow-600 font-medium">{team.draw}</div>
                   <div className="col-span-1 text-center text-sm text-red-600 font-medium">{team.lost}</div>
+                  <div className="col-span-1 text-center text-sm font-medium">{team.goalsFor}</div>
+                  <div className="col-span-1 text-center text-sm font-medium">{team.goalsAgainst}</div>
                   <div className="col-span-1 text-center text-sm">
                     <span className={team.goalDifference > 0 ? 'text-green-600' : team.goalDifference < 0 ? 'text-red-600' : ''}>
                       {team.goalDifference > 0 ? '+' : ''}{team.goalDifference}
