@@ -89,70 +89,157 @@ const Tables = () => {
       </div>
 
       <Card className="shadow-card overflow-hidden">
-        {/* Header */}
-        <div className="p-4 bg-muted/30 border-b border-border/50">
-          <div className="grid grid-cols-14 gap-2 text-xs font-medium text-muted-foreground uppercase tracking-wide">
-            <div className="col-span-1 text-center">Pos</div>
-            <div className="col-span-4">Squadra</div>
-            <div className="col-span-1 text-center">G</div>
-            <div className="col-span-1 text-center">V</div>
-            <div className="col-span-1 text-center">N</div>
-            <div className="col-span-1 text-center">P</div>
-            <div className="col-span-1 text-center">GF</div>
-            <div className="col-span-1 text-center">GS</div>
-            <div className="col-span-1 text-center">Dif</div>
-            <div className="col-span-2 text-center">Punti</div>
+        {/* Mobile View */}
+        <div className="block md:hidden">
+          <div className="p-4 bg-muted/30 border-b border-border/50">
+            <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wide">Classifica</h3>
+          </div>
+          <div className="divide-y divide-border/30">
+            {standings.map((team) => {
+              const badge = getPositionBadge(team.position);
+              return (
+                <div
+                  key={team.team.id}
+                  className={`p-4 ${getPositionStyle(team.position)}`}
+                >
+                  {/* Position and Team */}
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="flex items-center space-x-3">
+                      <div className="flex flex-col items-center">
+                        <span className="text-lg font-bold">{team.position}</span>
+                        {badge && (
+                          <Badge variant={badge.variant} className="text-xs px-1 py-0">
+                            {badge.text}
+                          </Badge>
+                        )}
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <div className="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center flex-shrink-0">
+                          <span className="text-xs font-bold text-primary">
+                            {team.team.shortName?.substring(0, 2) || team.team.name.substring(0, 2).toUpperCase()}
+                          </span>
+                        </div>
+                        <div>
+                          <div className="font-medium text-sm">{team.team.name}</div>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <div className="text-xl font-bold text-primary">{team.points}</div>
+                      <div className="text-xs text-muted-foreground">punti</div>
+                    </div>
+                  </div>
+                  
+                  {/* Stats Grid */}
+                  <div className="grid grid-cols-4 gap-3 text-center">
+                    <div>
+                      <div className="text-sm font-medium">{team.playedGames}</div>
+                      <div className="text-xs text-muted-foreground">G</div>
+                    </div>
+                    <div>
+                      <div className="text-sm font-medium text-green-600">{team.won}</div>
+                      <div className="text-xs text-muted-foreground">V</div>
+                    </div>
+                    <div>
+                      <div className="text-sm font-medium text-yellow-600">{team.draw}</div>
+                      <div className="text-xs text-muted-foreground">N</div>
+                    </div>
+                    <div>
+                      <div className="text-sm font-medium text-red-600">{team.lost}</div>
+                      <div className="text-xs text-muted-foreground">P</div>
+                    </div>
+                  </div>
+                  
+                  {/* Goals Stats */}
+                  <div className="grid grid-cols-3 gap-3 text-center mt-3 pt-3 border-t border-border/30">
+                    <div>
+                      <div className="text-sm font-medium">{team.goalsFor}</div>
+                      <div className="text-xs text-muted-foreground">GF</div>
+                    </div>
+                    <div>
+                      <div className="text-sm font-medium">{team.goalsAgainst}</div>
+                      <div className="text-xs text-muted-foreground">GS</div>
+                    </div>
+                    <div>
+                      <div className={`text-sm font-medium ${team.goalDifference > 0 ? 'text-green-600' : team.goalDifference < 0 ? 'text-red-600' : ''}`}>
+                        {team.goalDifference > 0 ? '+' : ''}{team.goalDifference}
+                      </div>
+                      <div className="text-xs text-muted-foreground">Dif</div>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
           </div>
         </div>
 
-        {/* Teams */}
-        <div className="divide-y divide-border/30">
-          {standings.map((team) => {
-            const badge = getPositionBadge(team.position);
-            return (
-              <div
-                key={team.team.id}
-                className={`p-3 transition-colors hover:bg-muted/20 ${getPositionStyle(team.position)}`}
-              >
-                <div className="grid grid-cols-14 gap-2 items-center">
-                  <div className="col-span-1 text-center">
-                    <div className="flex flex-col items-center">
-                      <span className="font-bold text-sm">{team.position}</span>
-                      {badge && (
-                        <Badge variant={badge.variant} className="text-xs px-1 py-0 mt-1">
-                          {badge.text}
-                        </Badge>
-                      )}
-                    </div>
-                  </div>
-                  <div className="col-span-4">
-                    <div className="flex items-center space-x-2">
-                      <div className="w-6 h-6 bg-primary/10 rounded-full flex items-center justify-center flex-shrink-0">
-                        <span className="text-xs font-bold text-primary">
-                          {team.team.shortName?.substring(0, 2) || team.team.name.substring(0, 2).toUpperCase()}
-                        </span>
+        {/* Desktop View */}
+        <div className="hidden md:block">
+          {/* Header */}
+          <div className="p-4 bg-muted/30 border-b border-border/50">
+            <div className="grid grid-cols-14 gap-2 text-xs font-medium text-muted-foreground uppercase tracking-wide">
+              <div className="col-span-1 text-center">Pos</div>
+              <div className="col-span-4">Squadra</div>
+              <div className="col-span-1 text-center">G</div>
+              <div className="col-span-1 text-center">V</div>
+              <div className="col-span-1 text-center">N</div>
+              <div className="col-span-1 text-center">P</div>
+              <div className="col-span-1 text-center">GF</div>
+              <div className="col-span-1 text-center">GS</div>
+              <div className="col-span-1 text-center">Dif</div>
+              <div className="col-span-2 text-center">Punti</div>
+            </div>
+          </div>
+
+          {/* Teams */}
+          <div className="divide-y divide-border/30">
+            {standings.map((team) => {
+              const badge = getPositionBadge(team.position);
+              return (
+                <div
+                  key={team.team.id}
+                  className={`p-3 transition-colors hover:bg-muted/20 ${getPositionStyle(team.position)}`}
+                >
+                  <div className="grid grid-cols-14 gap-2 items-center">
+                    <div className="col-span-1 text-center">
+                      <div className="flex flex-col items-center">
+                        <span className="font-bold text-sm">{team.position}</span>
+                        {badge && (
+                          <Badge variant={badge.variant} className="text-xs px-1 py-0 mt-1">
+                            {badge.text}
+                          </Badge>
+                        )}
                       </div>
-                      <span className="font-medium text-sm truncate">{team.team.name}</span>
                     </div>
-                  </div>
-                  <div className="col-span-1 text-center text-sm">{team.playedGames}</div>
-                  <div className="col-span-1 text-center text-sm text-green-600 font-medium">{team.won}</div>
-                  <div className="col-span-1 text-center text-sm text-yellow-600 font-medium">{team.draw}</div>
-                  <div className="col-span-1 text-center text-sm text-red-600 font-medium">{team.lost}</div>
-                  <div className="col-span-1 text-center text-sm font-medium">{team.goalsFor}</div>
-                  <div className="col-span-1 text-center text-sm font-medium">{team.goalsAgainst}</div>
-                  <div className="col-span-1 text-center text-sm">
-                    <span className={team.goalDifference > 0 ? 'text-green-600' : team.goalDifference < 0 ? 'text-red-600' : ''}>
-                      {team.goalDifference > 0 ? '+' : ''}{team.goalDifference}
-                    </span>
-                  </div>
-                  <div className="col-span-2 text-center">
-                    <span className="text-lg font-bold text-primary">{team.points}</span>
+                    <div className="col-span-4">
+                      <div className="flex items-center space-x-2">
+                        <div className="w-6 h-6 bg-primary/10 rounded-full flex items-center justify-center flex-shrink-0">
+                          <span className="text-xs font-bold text-primary">
+                            {team.team.shortName?.substring(0, 2) || team.team.name.substring(0, 2).toUpperCase()}
+                          </span>
+                        </div>
+                        <span className="font-medium text-sm truncate">{team.team.name}</span>
+                      </div>
+                    </div>
+                    <div className="col-span-1 text-center text-sm">{team.playedGames}</div>
+                    <div className="col-span-1 text-center text-sm text-green-600 font-medium">{team.won}</div>
+                    <div className="col-span-1 text-center text-sm text-yellow-600 font-medium">{team.draw}</div>
+                    <div className="col-span-1 text-center text-sm text-red-600 font-medium">{team.lost}</div>
+                    <div className="col-span-1 text-center text-sm font-medium">{team.goalsFor}</div>
+                    <div className="col-span-1 text-center text-sm font-medium">{team.goalsAgainst}</div>
+                    <div className="col-span-1 text-center text-sm">
+                      <span className={team.goalDifference > 0 ? 'text-green-600' : team.goalDifference < 0 ? 'text-red-600' : ''}>
+                        {team.goalDifference > 0 ? '+' : ''}{team.goalDifference}
+                      </span>
+                    </div>
+                    <div className="col-span-2 text-center">
+                      <span className="text-lg font-bold text-primary">{team.points}</span>
+                    </div>
                   </div>
                 </div>
-              </div>
-            );
-          })}
+              );
+            })}
+          </div>
         </div>
 
         {/* Legend */}
