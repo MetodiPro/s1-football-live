@@ -5,9 +5,12 @@ import { MatchCard } from "./MatchCard";
 import { useSerieASchedule, ScheduleMatch } from "@/hooks/useSerieASchedule";
 import { toast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useState } from "react";
 
 export function LiveScores() {
   const { matches, loading, error, refetch } = useSerieASchedule();
+  const [selectedMatchday, setSelectedMatchday] = useState<number | null>(null);
 
   const handleRefresh = async () => {
     await refetch();
@@ -148,8 +151,15 @@ export function LiveScores() {
 
   const currentMatchday = getCurrentMatchday();
   
-  // Get all matches for the current matchday
-  const currentMatchdayMatches = matches.filter(match => match.matchday === currentMatchday);
+  // Get available matchdays
+  const availableMatchdays = [...new Set(matches.map(match => match.matchday))]
+    .sort((a, b) => b - a); // Sort descending (most recent first)
+  
+  // Set default selected matchday if not set
+  const displayMatchday = selectedMatchday || currentMatchday;
+  
+  // Get all matches for the selected matchday
+  const currentMatchdayMatches = matches.filter(match => match.matchday === displayMatchday);
   const convertedMatches = currentMatchdayMatches.map(convertMatch);
   
   // Separate live and other matches
@@ -176,15 +186,38 @@ export function LiveScores() {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-lg font-bold text-foreground">
-            Serie A - Giornata {currentMatchday}
-          </h2>
-          <p className="text-sm text-muted-foreground">
-            {liveMatches.length > 0 ? 'In corso' : 
-             convertedMatches.some(m => m.status === 'upcoming') ? 'In corso' : 
-             'Completata'}
-          </p>
+        <div className="flex items-center gap-4">
+          <div>
+            <h2 className="text-lg font-bold text-foreground">
+              Serie A
+            </h2>
+            <p className="text-sm text-muted-foreground">
+              {liveMatches.length > 0 ? 'In corso' : 
+               convertedMatches.some(m => m.status === 'upcoming') ? 'In corso' : 
+               'Completata'}
+            </p>
+          </div>
+          <div className="flex flex-col">
+            <label className="text-xs text-muted-foreground mb-1">Giornata</label>
+            <Select
+              value={displayMatchday.toString()}
+              onValueChange={(value) => setSelectedMatchday(parseInt(value))}
+            >
+              <SelectTrigger className="w-[140px] h-8">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {availableMatchdays.map((matchday) => (
+                  <SelectItem key={matchday} value={matchday.toString()}>
+                    Giornata {matchday}
+                    {matchday === currentMatchday && (
+                      <span className="text-xs text-primary ml-2">(corrente)</span>
+                    )}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
         </div>
         <Button variant="ghost" size="sm" onClick={handleRefresh} className="p-2">
           <RefreshCw className="w-4 h-4" />
