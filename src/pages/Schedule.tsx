@@ -28,7 +28,7 @@ const Schedule = () => {
 
   const sortedMatchdays = Object.keys(matchesByMatchday)
     .map(Number)
-    .sort((a, b) => b - a); // Most recent first
+    .sort((a, b) => a - b); // First matchday first
 
   if (loading) {
     return (
