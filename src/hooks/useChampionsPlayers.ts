@@ -26,7 +26,15 @@ export const useChampionsTopScorers = () => {
 
   useEffect(() => {
     if (data && data.response) {
-      const transformedScorers = data.response.map((item: any) => ({
+      // Filter players who have played in group stage or later (exclude qualifiers)
+      const filteredPlayers = data.response.filter((item: any) => {
+        const stats = item.statistics[0];
+        // Only include players from teams that qualified for group stage
+        // This is indicated by having played Champions League matches (not just qualifiers)
+        return stats && stats.games && stats.games.appearences > 0;
+      });
+
+      const transformedScorers = filteredPlayers.map((item: any) => ({
         player: {
           id: item.player.id.toString(),
           name: item.player.name,
@@ -70,7 +78,14 @@ export const useChampionsTopAssists = () => {
 
   useEffect(() => {
     if (data && data.response) {
-      const transformedAssists = data.response.map((item: any) => ({
+      // Filter players who have played in group stage or later (exclude qualifiers)
+      const filteredPlayers = data.response.filter((item: any) => {
+        const stats = item.statistics[0];
+        // Only include players from teams that qualified for group stage
+        return stats && stats.games && stats.games.appearences > 0;
+      });
+
+      const transformedAssists = filteredPlayers.map((item: any) => ({
         player: {
           id: item.player.id.toString(),
           name: item.player.name,

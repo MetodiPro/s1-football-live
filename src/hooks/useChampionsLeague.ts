@@ -5,6 +5,7 @@ export interface ChampionsMatch {
   id: string;
   date: string;
   status: string;
+  round: string;
   homeTeam: {
     id: string;
     name: string;
@@ -52,10 +53,22 @@ export const useChampionsLeague = () => {
 
   useEffect(() => {
     if (fixturesData && fixturesData.response) {
-      const transformedFixtures = fixturesData.response.map((match: any) => ({
+      // Filter only group stage and knockout matches (exclude qualifiers)
+      const filteredMatches = fixturesData.response.filter((match: any) => {
+        const round = match.league.round?.toLowerCase() || '';
+        return round.includes('group') || 
+               round.includes('round of 16') || 
+               round.includes('quarter') || 
+               round.includes('semi') || 
+               round.includes('final') ||
+               round.includes('knockout');
+      });
+
+      const transformedFixtures = filteredMatches.map((match: any) => ({
         id: match.fixture.id.toString(),
         date: match.fixture.date,
         status: match.fixture.status.short,
+        round: match.league.round,
         homeTeam: {
           id: match.teams.home.id.toString(),
           name: match.teams.home.name,
@@ -72,6 +85,9 @@ export const useChampionsLeague = () => {
         },
         venue: match.fixture.venue?.name || 'TBD',
       }));
+      
+      // Sort by date
+      transformedFixtures.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
       setFixtures(transformedFixtures);
     }
 
