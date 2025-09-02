@@ -47,8 +47,8 @@ export const useChampionsLeague = () => {
   const [error, setError] = useState<string | null>(null);
 
   // UEFA Champions League ID is 2
-  const { data: fixturesData, loading: fixturesLoading, error: fixturesError } = useApiFootball('fixtures?league=2&season=2024');
-  const { data: standingsData, loading: standingsLoading, error: standingsError } = useApiFootball('standings?league=2&season=2024');
+  const { data: fixturesData, loading: fixturesLoading, error: fixturesError } = useApiFootball('fixtures?league=2&season=2025');
+  const { data: standingsData, loading: standingsLoading, error: standingsError } = useApiFootball('standings?league=2&season=2025');
 
   useEffect(() => {
     if (fixturesData && fixturesData.response) {

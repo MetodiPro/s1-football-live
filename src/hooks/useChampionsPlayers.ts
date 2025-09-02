@@ -22,7 +22,7 @@ export const useChampionsTopScorers = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const { data, loading: apiLoading, error: apiError } = useApiFootball('players/topscorers?league=2&season=2024');
+  const { data, loading: apiLoading, error: apiError } = useApiFootball('players/topscorers?league=2&season=2025');
 
   useEffect(() => {
     if (data && data.response) {
@@ -66,7 +66,7 @@ export const useChampionsTopAssists = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const { data, loading: apiLoading, error: apiError } = useApiFootball('players/topassists?league=2&season=2024');
+  const { data, loading: apiLoading, error: apiError } = useApiFootball('players/topassists?league=2&season=2025');
 
   useEffect(() => {
     if (data && data.response) {
