@@ -26,12 +26,15 @@ export const useChampionsTopScorers = () => {
 
   useEffect(() => {
     if (data && data.response) {
-      // Filter players who have played in group stage or later (exclude qualifiers)
+      // Filter players who have played ONLY in group stage or later (exclude qualifiers completely)
       const filteredPlayers = data.response.filter((item: any) => {
         const stats = item.statistics[0];
-        // Only include players from teams that qualified for group stage
-        // This is indicated by having played Champions League matches (not just qualifiers)
-        return stats && stats.games && stats.games.appearences > 0;
+        if (!stats || !stats.games || stats.games.appearences === 0) return false;
+        
+        // Check if the player's team is in the main tournament (not qualifiers)
+        // Players in qualifiers only would have different league round info
+        // We want players whose statistics are from the main Champions League phase
+        return stats.league && stats.league.id === 2 && stats.league.name.includes('Champions League');
       });
 
       const transformedScorers = filteredPlayers.map((item: any) => ({
@@ -78,11 +81,13 @@ export const useChampionsTopAssists = () => {
 
   useEffect(() => {
     if (data && data.response) {
-      // Filter players who have played in group stage or later (exclude qualifiers)
+      // Filter players who have played ONLY in group stage or later (exclude qualifiers completely)
       const filteredPlayers = data.response.filter((item: any) => {
         const stats = item.statistics[0];
-        // Only include players from teams that qualified for group stage
-        return stats && stats.games && stats.games.appearences > 0;
+        if (!stats || !stats.games || stats.games.appearences === 0) return false;
+        
+        // Check if the player's team is in the main tournament (not qualifiers)
+        return stats.league && stats.league.id === 2 && stats.league.name.includes('Champions League');
       });
 
       const transformedAssists = filteredPlayers.map((item: any) => ({

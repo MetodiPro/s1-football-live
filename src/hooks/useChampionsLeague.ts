@@ -53,15 +53,14 @@ export const useChampionsLeague = () => {
 
   useEffect(() => {
     if (fixturesData && fixturesData.response) {
-      // Filter only group stage and knockout matches (exclude qualifiers)
+      // Filter only group stage matches specifically
       const filteredMatches = fixturesData.response.filter((match: any) => {
         const round = match.league.round?.toLowerCase() || '';
-        return round.includes('group') || 
-               round.includes('round of 16') || 
-               round.includes('quarter') || 
-               round.includes('semi') || 
-               round.includes('final') ||
-               round.includes('knockout');
+        // Only include matches from group stage onwards (not qualifying rounds)
+        return round.includes('group stage') || 
+               round.includes('matchday') ||
+               round.includes('group') && !round.includes('qualifying') &&
+               !round.includes('preliminary') && !round.includes('play-off');
       });
 
       const transformedFixtures = filteredMatches.map((match: any) => ({
