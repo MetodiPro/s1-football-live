@@ -114,8 +114,26 @@ const MatchDetails = () => {
             {/* Score */}
             <div className="text-center">
               {hasScore ? (
-                <div className="text-4xl font-bold text-primary">
-                  {match.goals.home} - {match.goals.away}
+                <div className="space-y-2">
+                  <div className="text-4xl font-bold text-primary">
+                    {match.goals.home} - {match.goals.away}
+                  </div>
+                  <div className="space-y-1 text-sm text-muted-foreground">
+                    <div className="flex justify-between">
+                      <span>Tempo pieno:</span>
+                      <span className="font-mono">
+                        {match.score.fulltime.home} - {match.score.fulltime.away}
+                      </span>
+                    </div>
+                    {match.score.halftime.home !== null && (
+                      <div className="flex justify-between">
+                        <span>Primo tempo:</span>
+                        <span className="font-mono">
+                          {match.score.halftime.home} - {match.score.halftime.away}
+                        </span>
+                      </div>
+                    )}
+                  </div>
                 </div>
               ) : (
                 <div className="text-2xl font-medium text-muted-foreground">
@@ -150,31 +168,6 @@ const MatchDetails = () => {
         </div>
       </Card>
 
-      {/* Dettagli risultato */}
-      {hasScore && (
-        <Card className="shadow-card p-6">
-          <h3 className="font-semibold mb-4 flex items-center">
-            <Target className="w-4 h-4 mr-2" />
-            Risultato
-          </h3>
-          <div className="space-y-3">
-            <div className="flex justify-between items-center">
-              <span className="text-muted-foreground">Tempo pieno:</span>
-              <span className="font-mono text-lg">
-                {match.score.fulltime.home} - {match.score.fulltime.away}
-              </span>
-            </div>
-            {match.score.halftime.home !== null && (
-              <div className="flex justify-between items-center">
-                <span className="text-muted-foreground">Primo tempo:</span>
-                <span className="font-mono">
-                  {match.score.halftime.home} - {match.score.halftime.away}
-                </span>
-              </div>
-            )}
-          </div>
-        </Card>
-      )}
 
       {/* Marcatori */}
       <MatchScorers 
@@ -183,14 +176,12 @@ const MatchDetails = () => {
         awayTeam={match.teams.away} 
       />
 
-      {/* Eventi della partita */}
-      <MatchEvents events={events} />
-
-      {/* Statistiche */}
-      <MatchStatistics statistics={statistics} />
 
       {/* Formazioni */}
       <MatchLineups lineups={lineups} />
+
+      {/* Statistiche */}
+      <MatchStatistics statistics={statistics} />
 
       {/* Sostituzioni e Cartellini */}
       {events && events.length > 0 && (
@@ -272,40 +263,6 @@ const MatchDetails = () => {
         </div>
       )}
 
-      {/* Informazioni partita */}
-      <Card className="shadow-card p-6">
-        <h3 className="font-semibold mb-4 flex items-center">
-          <Calendar className="w-4 h-4 mr-2" />
-          Informazioni partita
-        </h3>
-        <div className="space-y-3 text-sm">
-          <div className="flex justify-between">
-            <span className="text-muted-foreground">Data e ora:</span>
-            <span>{new Date(match.fixture.date).toLocaleString('it-IT')}</span>
-          </div>
-          <div className="flex justify-between">
-            <span className="text-muted-foreground">Status:</span>
-            <Badge variant="outline">
-              {match.fixture.status.long}
-            </Badge>
-          </div>
-          {match.fixture.venue.name && (
-            <div className="flex justify-between">
-              <span className="text-muted-foreground flex items-center">
-                <MapPin className="w-3 h-3 mr-1" />
-                Stadio:
-              </span>
-              <span>{match.fixture.venue.name}</span>
-            </div>
-          )}
-          {match.fixture.referee && (
-            <div className="flex justify-between">
-              <span className="text-muted-foreground">Arbitro:</span>
-              <span>{match.fixture.referee}</span>
-            </div>
-          )}
-        </div>
-      </Card>
     </main>
   );
 };
