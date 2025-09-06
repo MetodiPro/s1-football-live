@@ -109,9 +109,26 @@ export const useNapoliMatches = () => {
         venue: match.fixture.venue?.name || 'TBD',
       }));
       
-      // Sort chronologically (oldest first)
+      // Sort chronologically: completed matches first (newest to oldest), then upcoming matches (oldest to newest)
       transformedMatches.sort((a, b) => {
-        return new Date(a.date).getTime() - new Date(b.date).getTime();
+        const dateA = new Date(a.date);
+        const dateB = new Date(b.date);
+        const now = new Date();
+        
+        const aCompleted = a.status === 'FT' || a.status === 'AET' || a.status === 'PEN';
+        const bCompleted = b.status === 'FT' || b.status === 'AET' || b.status === 'PEN';
+        
+        // Completed matches come first
+        if (aCompleted && !bCompleted) return -1;
+        if (!aCompleted && bCompleted) return 1;
+        
+        // Within completed matches, show newest first
+        if (aCompleted && bCompleted) {
+          return dateB.getTime() - dateA.getTime();
+        }
+        
+        // Within upcoming matches, show oldest first  
+        return dateA.getTime() - dateB.getTime();
       });
       
       console.log('Final transformed matches:', transformedMatches.length);
