@@ -61,49 +61,60 @@ export const useNapoliMatches = () => {
 
   useEffect(() => {
     if (data && data.response) {
-      const transformedMatches = data.response
-        .filter((match: any) => {
-          // Filter only specific competitions and exclude friendlies
-          const leagueName = match.league.name.toLowerCase();
-          return (
-            (leagueName.includes('serie a') ||
-            leagueName.includes('coppa italia') ||
-            leagueName.includes('supercoppa') ||
-            leagueName.includes('superlega') ||
-            leagueName.includes('champions league') ||
-            leagueName.includes('uefa champions league')) &&
-            !leagueName.includes('friendly') &&
-            !leagueName.includes('friendlies') &&
-            !leagueName.includes('amichevole')
-          );
-        })
-        .map((match: any) => ({
-          id: match.fixture.id.toString(),
-          date: match.fixture.date,
-          status: match.fixture.status.short,
-          league: match.league.name,
-          round: match.league.round,
-          homeTeam: {
-            id: match.teams.home.id.toString(),
-            name: match.teams.home.name,
-            logo: match.teams.home.logo,
-          },
-          awayTeam: {
-            id: match.teams.away.id.toString(),
-            name: match.teams.away.name,
-            logo: match.teams.away.logo,
-          },
-          score: {
-            home: match.goals.home,
-            away: match.goals.away,
-          },
-          venue: match.fixture.venue?.name || 'TBD',
-        }));
+      console.log('All Napoli matches from API:', data.response.length);
       
-      // Sort chronologically (most recent first, then upcoming)
+      const filteredMatches = data.response.filter((match: any) => {
+        // Filter only specific competitions and exclude friendlies
+        const leagueName = match.league.name.toLowerCase();
+        const isValidCompetition = (
+          leagueName.includes('serie a') ||
+          leagueName.includes('coppa italia') ||
+          leagueName.includes('supercoppa') ||
+          leagueName.includes('superlega') ||
+          leagueName.includes('champions league') ||
+          leagueName.includes('uefa champions league')
+        );
+        const isFriendly = (
+          leagueName.includes('friendly') ||
+          leagueName.includes('friendlies') ||
+          leagueName.includes('amichevole')
+        );
+        
+        console.log(`Match: ${match.league.name}, Status: ${match.fixture.status.short}, Valid: ${isValidCompetition && !isFriendly}`);
+        return isValidCompetition && !isFriendly;
+      });
+      
+      console.log('Filtered matches:', filteredMatches.length);
+      
+      const transformedMatches = filteredMatches.map((match: any) => ({
+        id: match.fixture.id.toString(),
+        date: match.fixture.date,
+        status: match.fixture.status.short,
+        league: match.league.name,
+        round: match.league.round,
+        homeTeam: {
+          id: match.teams.home.id.toString(),
+          name: match.teams.home.name,
+          logo: match.teams.home.logo,
+        },
+        awayTeam: {
+          id: match.teams.away.id.toString(),
+          name: match.teams.away.name,
+          logo: match.teams.away.logo,
+        },
+        score: {
+          home: match.goals.home,
+          away: match.goals.away,
+        },
+        venue: match.fixture.venue?.name || 'TBD',
+      }));
+      
+      // Sort chronologically (most recent first)
       transformedMatches.sort((a, b) => {
         return new Date(b.date).getTime() - new Date(a.date).getTime();
       });
+      
+      console.log('Final transformed matches:', transformedMatches.length);
       
       setMatches(transformedMatches);
       setError(null);
