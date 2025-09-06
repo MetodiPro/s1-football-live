@@ -42,9 +42,29 @@ export const NapoliPlayers = ({ players, loading }: NapoliPlayersProps) => {
     .sort((a, b) => b.assists - a.assists)
     .slice(0, 10);
 
+  // Sort players by position: Goalkeeper -> Defender -> Midfielder -> Attacker
+  const getPositionPriority = (position: string): number => {
+    const pos = position.toLowerCase();
+    if (pos.includes('goalkeeper') || pos.includes('goalie') || pos === 'g') return 1;
+    if (pos.includes('defender') || pos.includes('defence') || pos === 'd') return 2;
+    if (pos.includes('midfielder') || pos.includes('midfield') || pos === 'm') return 3;
+    if (pos.includes('attacker') || pos.includes('forward') || pos.includes('striker') || pos === 'f') return 4;
+    return 5; // Unknown positions last
+  };
+
   const allPlayers = players
-    .sort((a, b) => b.matches - a.matches)
-    .slice(0, 20);
+    .sort((a, b) => {
+      const aPriority = getPositionPriority(a.position);
+      const bPriority = getPositionPriority(b.position);
+      
+      if (aPriority !== bPriority) {
+        return aPriority - bPriority; // Sort by position first
+      }
+      
+      // Within same position, sort by matches played (descending)
+      return b.matches - a.matches;
+    })
+    .slice(0, 25);
 
   const getPositionColor = (position: string) => {
     switch (position.toLowerCase()) {

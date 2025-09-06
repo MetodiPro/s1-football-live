@@ -73,7 +73,7 @@ export const NapoliMatches = ({ matches, loading }: NapoliMatchesProps) => {
   return (
     <Card className="shadow-card">
       <div className="p-6">
-        <h3 className="text-lg font-semibold mb-4">Partite Recenti e Prossime</h3>
+        <h3 className="text-lg font-semibold mb-4">Partite e Risultati</h3>
         <div className="space-y-3">
           {recentMatches.map((match) => {
             const isHome = match.homeTeam.name === 'Napoli';
