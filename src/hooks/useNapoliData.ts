@@ -56,8 +56,8 @@ export const useNapoliMatches = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Napoli team ID is 113
-  const { data, loading: apiLoading, error: apiError } = useApiFootball('fixtures?team=113&season=2025');
+  // Napoli team ID is 492
+  const { data, loading: apiLoading, error: apiError } = useApiFootball('fixtures?team=492&season=2025');
 
   useEffect(() => {
     if (data && data.response) {
@@ -110,7 +110,7 @@ export const useNapoliPlayers = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const { data, loading: apiLoading, error: apiError } = useApiFootball('players?team=113&season=2025');
+  const { data, loading: apiLoading, error: apiError } = useApiFootball('players?team=492&season=2025');
 
   useEffect(() => {
     if (data && data.response) {
@@ -151,12 +151,12 @@ export const useNapoliStats = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const { data, loading: apiLoading, error: apiError } = useApiFootball('standings?league=135&season=2025&team=113');
+  const { data, loading: apiLoading, error: apiError } = useApiFootball('standings?league=135&season=2025&team=492');
 
   useEffect(() => {
     if (data && data.response && data.response[0]) {
       const standings = data.response[0].league.standings[0];
-      const napoliStanding = standings.find((team: any) => team.team.id === 113);
+      const napoliStanding = standings.find((team: any) => team.team.id === 492);
       
       if (napoliStanding) {
         setStats({
