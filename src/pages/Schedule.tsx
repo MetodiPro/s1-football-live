@@ -4,9 +4,11 @@ import { RefreshCw, AlertCircle, Calendar as CalendarIcon } from "lucide-react";
 import { useSerieASchedule } from "@/hooks/useSerieASchedule";
 import { toast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
+import { useNavigate } from "react-router-dom";
 
 const Schedule = () => {
   const { matches, loading, error, refetch } = useSerieASchedule();
+  const navigate = useNavigate();
 
   const handleRefresh = async () => {
     await refetch();
@@ -14,6 +16,10 @@ const Schedule = () => {
       title: "Calendario aggiornato",
       description: "Il calendario è stato aggiornato con successo.",
     });
+  };
+
+  const handleMatchClick = (matchId: string) => {
+    navigate(`/match/${matchId}`);
   };
 
   // Group matches by matchday
@@ -94,7 +100,11 @@ const Schedule = () => {
             </div>
             <div className="p-4 space-y-3">
               {matchesByMatchday[matchday].map((match) => (
-                <div key={match.id} className="flex items-center justify-between p-3 bg-muted/30 rounded-lg">
+                <div 
+                  key={match.id} 
+                  className="flex items-center justify-between p-3 bg-muted/30 rounded-lg hover:bg-muted/40 cursor-pointer transition-colors"
+                  onClick={() => handleMatchClick(match.id)}
+                >
                   <div className="flex items-center space-x-3 flex-1">
                     <div className="text-center min-w-[60px]">
                       <div className="text-xs text-muted-foreground">
