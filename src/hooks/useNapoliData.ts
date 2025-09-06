@@ -63,15 +63,18 @@ export const useNapoliMatches = () => {
     if (data && data.response) {
       const transformedMatches = data.response
         .filter((match: any) => {
-          // Filter only specific competitions
+          // Filter only specific competitions and exclude friendlies
           const leagueName = match.league.name.toLowerCase();
           return (
-            leagueName.includes('serie a') ||
+            (leagueName.includes('serie a') ||
             leagueName.includes('coppa italia') ||
             leagueName.includes('supercoppa') ||
             leagueName.includes('superlega') ||
             leagueName.includes('champions league') ||
-            leagueName.includes('uefa champions league')
+            leagueName.includes('uefa champions league')) &&
+            !leagueName.includes('friendly') &&
+            !leagueName.includes('friendlies') &&
+            !leagueName.includes('amichevole')
           );
         })
         .map((match: any) => ({
