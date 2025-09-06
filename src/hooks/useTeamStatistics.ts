@@ -22,44 +22,169 @@ export const useTeamStatistics = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Get all teams first, then we'll aggregate their stats
-  const { data, loading: apiLoading, error: apiError } = useApiFootball('teams?league=135&season=2025');
+  // Get Serie A standings to get all teams
+  const { data: standingsData, loading: standingsLoading, error: standingsError } = useApiFootball('standings?league=135&season=2025');
 
   useEffect(() => {
-    if (data && data.response) {
-      // For now, we'll create mock data based on the teams
-      // In a real scenario, you'd need to fetch individual team statistics
-      const transformedStats = data.response.map((item: any, index: number) => ({
-        team: {
-          id: item.team.id.toString(),
-          name: item.team.name,
-          logo: item.team.logo,
-        },
-        possession: Math.floor(Math.random() * 30) + 40, // Mock data 40-70%
-        shotsOnGoal: Math.floor(Math.random() * 20) + 15, // Mock data 15-35
-        totalShots: Math.floor(Math.random() * 40) + 30, // Mock data 30-70
-        corners: Math.floor(Math.random() * 15) + 10, // Mock data 10-25
-        foulsDrawn: Math.floor(Math.random() * 20) + 15, // Mock data 15-35
-        foulsCommitted: Math.floor(Math.random() * 25) + 20, // Mock data 20-45
-        expectedGoals: Math.round((Math.random() * 3 + 1) * 100) / 100, // Mock data 1.0-4.0
-        matches: 2, // Current matches played
-      }));
-      
-      setStatistics(transformedStats);
-      setError(null);
-    } else if (apiError) {
-      setError(apiError);
+    const fetchTeamStatistics = async () => {
+      if (!standingsData || !standingsData.response || standingsData.response.length === 0) {
+        return;
+      }
+
+      try {
+        setLoading(true);
+        const teams = standingsData.response[0].league.standings[0];
+        const teamStats: TeamStatistic[] = [];
+
+        // For each team, we'll aggregate their season statistics
+        for (const teamData of teams) {
+          const teamId = teamData.team.id;
+          
+          // Fetch all matches for this team in Serie A 2025
+          const matchesResponse = await fetch(`https://urebctifhcxphqbhwrjr.supabase.co/functions/v1/api-football`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              endpoint: `fixtures?team=${teamId}&league=135&season=2025&status=FT`
+            })
+          });
+
+          if (!matchesResponse.ok) continue;
+
+          const matchesData = await matchesResponse.json();
+          
+          if (!matchesData.response || matchesData.response.length === 0) {
+            // No completed matches yet, use team data from standings
+            teamStats.push({
+              team: {
+                id: teamId.toString(),
+                name: teamData.team.name,
+                logo: teamData.team.logo,
+              },
+              possession: 50, // Default value when no matches
+              shotsOnGoal: 0,
+              totalShots: 0,
+              corners: 0,
+              foulsDrawn: 0,
+              foulsCommitted: 0,
+              expectedGoals: 0,
+              matches: teamData.all.played,
+            });
+            continue;
+          }
+
+          // Aggregate statistics from all completed matches
+          let totalPossession = 0;
+          let totalShotsOnGoal = 0;
+          let totalShotsTotal = 0;
+          let totalCorners = 0;
+          let totalFoulsDrawn = 0;
+          let totalFoulsCommitted = 0;
+          let totalExpectedGoals = 0;
+          let matchCount = 0;
+
+          for (const match of matchesData.response) {
+            // Fetch match statistics
+            const statsResponse = await fetch(`https://urebctifhcxphqbhwrjr.supabase.co/functions/v1/api-football`, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                endpoint: `fixtures/statistics?fixture=${match.fixture.id}`
+              })
+            });
+
+            if (!statsResponse.ok) continue;
+
+            const statsData = await statsResponse.json();
+            
+            if (!statsData.response || statsData.response.length === 0) continue;
+
+            // Find team's statistics in this match
+            const teamStats = statsData.response.find((stat: any) => stat.team.id === teamId);
+            if (!teamStats || !teamStats.statistics) continue;
+
+            matchCount++;
+
+            // Extract statistics
+            teamStats.statistics.forEach((stat: any) => {
+              switch (stat.type) {
+                case 'Ball Possession':
+                  if (stat.value && stat.value !== null) {
+                    totalPossession += parseInt(stat.value.replace('%', '')) || 0;
+                  }
+                  break;
+                case 'Shots on Goal':
+                  totalShotsOnGoal += stat.value || 0;
+                  break;
+                case 'Total Shots':
+                  totalShotsTotal += stat.value || 0;
+                  break;
+                case 'Corner Kicks':
+                  totalCorners += stat.value || 0;
+                  break;
+                case 'Fouls':
+                  totalFoulsCommitted += stat.value || 0;
+                  break;
+                case 'expected_goals':
+                  totalExpectedGoals += parseFloat(stat.value) || 0;
+                  break;
+              }
+            });
+          }
+
+          // Calculate averages and totals
+          teamStats.push({
+            team: {
+              id: teamId.toString(),
+              name: teamData.team.name,
+              logo: teamData.team.logo,
+            },
+            possession: matchCount > 0 ? Math.round(totalPossession / matchCount) : 50,
+            shotsOnGoal: Math.round(totalShotsOnGoal / Math.max(matchCount, 1)),
+            totalShots: Math.round(totalShotsTotal / Math.max(matchCount, 1)),
+            corners: Math.round(totalCorners / Math.max(matchCount, 1)),
+            foulsDrawn: Math.round(totalFoulsDrawn / Math.max(matchCount, 1)), // Using foulsCommitted as approximation
+            foulsCommitted: Math.round(totalFoulsCommitted / Math.max(matchCount, 1)),
+            expectedGoals: Math.round((totalExpectedGoals / Math.max(matchCount, 1)) * 100) / 100,
+            matches: teamData.all.played,
+          });
+
+          // Add small delay to avoid rate limiting
+          await new Promise(resolve => setTimeout(resolve, 100));
+        }
+
+        setStatistics(teamStats);
+        setError(null);
+      } catch (err) {
+        console.error('Error fetching team statistics:', err);
+        setError('Errore nel caricamento delle statistiche');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (standingsData && standingsData.response) {
+      fetchTeamStatistics();
+    } else if (standingsError) {
+      setError(standingsError);
+      setLoading(standingsLoading);
+    } else {
+      setLoading(standingsLoading);
     }
-    
-    setLoading(apiLoading);
-  }, [data, apiLoading, apiError]);
+  }, [standingsData, standingsError, standingsLoading]);
 
   return {
     statistics,
     loading,
     error,
     refetch: () => {
-      // Auto-refetch handled by useApiFootball
+      // Trigger re-fetch by clearing current data
+      setStatistics([]);
+      setLoading(true);
     }
   };
 };
