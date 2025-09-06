@@ -61,49 +61,47 @@ export const useNapoliMatches = () => {
 
   useEffect(() => {
     if (data && data.response) {
-      const transformedMatches = data.response.map((match: any) => ({
-        id: match.fixture.id.toString(),
-        date: match.fixture.date,
-        status: match.fixture.status.short,
-        league: match.league.name,
-        round: match.league.round,
-        homeTeam: {
-          id: match.teams.home.id.toString(),
-          name: match.teams.home.name,
-          logo: match.teams.home.logo,
-        },
-        awayTeam: {
-          id: match.teams.away.id.toString(),
-          name: match.teams.away.name,
-          logo: match.teams.away.logo,
-        },
-        score: {
-          home: match.goals.home,
-          away: match.goals.away,
-        },
-        venue: match.fixture.venue?.name || 'TBD',
-      }));
+      const transformedMatches = data.response
+        .filter((match: any) => {
+          // Filter only specific competitions
+          const leagueName = match.league.name.toLowerCase();
+          return (
+            leagueName.includes('serie a') ||
+            leagueName.includes('coppa italia') ||
+            leagueName.includes('supercoppa') ||
+            leagueName.includes('superlega') ||
+            leagueName.includes('champions league') ||
+            leagueName.includes('uefa champions league')
+          );
+        })
+        .map((match: any) => ({
+          id: match.fixture.id.toString(),
+          date: match.fixture.date,
+          status: match.fixture.status.short,
+          league: match.league.name,
+          round: match.league.round,
+          homeTeam: {
+            id: match.teams.home.id.toString(),
+            name: match.teams.home.name,
+            logo: match.teams.home.logo,
+          },
+          awayTeam: {
+            id: match.teams.away.id.toString(),
+            name: match.teams.away.name,
+            logo: match.teams.away.logo,
+          },
+          score: {
+            home: match.goals.home,
+            away: match.goals.away,
+          },
+          venue: match.fixture.venue?.name || 'TBD',
+        }));
       
-      // Sort by date (completed matches first, then upcoming)
+      // Sort chronologically (most recent first, then upcoming)
       transformedMatches.sort((a, b) => {
-        const dateA = new Date(a.date);
-        const dateB = new Date(b.date);
-        const now = new Date();
-        
-        // Separate completed and upcoming matches
-        const aCompleted = a.status === 'FT' || dateA < now;
-        const bCompleted = b.status === 'FT' || dateB < now;
-        
-        if (aCompleted && !bCompleted) return -1;
-        if (!aCompleted && bCompleted) return 1;
-        
-        // Within each group, sort by date (most recent completed first, earliest upcoming first)
-        if (aCompleted) {
-          return dateB.getTime() - dateA.getTime(); // Recent completed first
-        } else {
-          return dateA.getTime() - dateB.getTime(); // Earliest upcoming first
-        }
+        return new Date(b.date).getTime() - new Date(a.date).getTime();
       });
+      
       setMatches(transformedMatches);
       setError(null);
     } else if (apiError) {

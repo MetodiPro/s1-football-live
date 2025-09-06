@@ -68,14 +68,14 @@ export const NapoliMatches = ({ matches, loading }: NapoliMatchesProps) => {
     return 'D';
   };
 
-  const recentMatches = matches.slice(0, 10);
+  const allMatches = matches.slice(0, 15);
 
   return (
     <Card className="shadow-card">
       <div className="p-6">
-        <h3 className="text-lg font-semibold mb-4">Partite e Risultati</h3>
+        <h3 className="text-lg font-semibold mb-4">Partite Ufficiali</h3>
         <div className="space-y-3">
-          {recentMatches.map((match) => {
+          {allMatches.map((match) => {
             const isHome = match.homeTeam.name === 'Napoli';
             const opponent = isHome ? match.awayTeam : match.homeTeam;
             const result = getMatchResult(match);
