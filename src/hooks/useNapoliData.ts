@@ -109,9 +109,9 @@ export const useNapoliMatches = () => {
         venue: match.fixture.venue?.name || 'TBD',
       }));
       
-      // Sort chronologically (most recent first)
+      // Sort chronologically (oldest first)
       transformedMatches.sort((a, b) => {
-        return new Date(b.date).getTime() - new Date(a.date).getTime();
+        return new Date(a.date).getTime() - new Date(b.date).getTime();
       });
       
       console.log('Final transformed matches:', transformedMatches.length);
