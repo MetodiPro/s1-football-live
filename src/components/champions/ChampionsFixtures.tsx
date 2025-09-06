@@ -75,6 +75,25 @@ export const ChampionsFixtures = ({ fixtures, loading }: ChampionsFixturesProps)
     return a.localeCompare(b);
   });
 
+  // Show message if no group stage matches are available
+  if (fixtures.length === 0) {
+    return (
+      <Card className="shadow-card">
+        <div className="p-6 text-center">
+          <h3 className="text-lg font-semibold mb-4">Partite Champions League - Fase a Gironi</h3>
+          <div className="py-8">
+            <p className="text-muted-foreground mb-2">
+              Nessuna partita della fase a gironi disponibile al momento
+            </p>
+            <p className="text-sm text-muted-foreground">
+              Le partite della fase a gironi verranno mostrate quando saranno programmate
+            </p>
+          </div>
+        </div>
+      </Card>
+    );
+  }
+
   return (
     <div className="space-y-6">
       {sortedRounds.map((round) => (
